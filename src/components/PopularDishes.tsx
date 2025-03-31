@@ -37,7 +37,7 @@ const dishes: Dish[] = [
     name: "Grilled Salad with Fries",
     description: "Made from Fresh Salad",
     image: "/public/lovable-uploads/a9d863ba-60fc-44bc-a430-a3693f510471.png",
-    price: "N3,500",
+    price: "Ksh99",
     rating: 5,
     isNew: true,
   },

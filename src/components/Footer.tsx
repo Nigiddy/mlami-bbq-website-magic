@@ -50,7 +50,7 @@ const Footer = () => {
             <h3 className="text-lg font-medium mb-4">Open Hours</h3>
             <div className="space-y-2">
               <p className="text-gray-600 text-sm">Monday - Friday: 9:00 AM - 10:00 PM</p>
-              <p className="text-gray-600 text-sm">Saturday - Sunday: 10:00 AM - 11:00 PM</p>
+              <p className="text-gray-600 text-sm">Saturday - Sunday: 10:00 AM - 9:00 PM</p>
             </div>
             <div className="mt-4">
               <Link to="#" className="bg-black text-white px-4 py-2 rounded-full text-sm inline-block hover:bg-bbq-orange transition-colors">
