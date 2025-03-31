@@ -46,7 +46,7 @@ const dishes: Dish[] = [
     name: "Grilled Steak with Fries",
     description: "Made from Salmon",
     image: "/public/lovable-uploads/a9d863ba-60fc-44bc-a430-a3693f510471.png",
-    price: "N6,500",
+    price: "Ksh250",
     rating: 4,
   },
 ];
