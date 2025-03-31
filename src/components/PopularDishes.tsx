@@ -28,7 +28,7 @@ const dishes: Dish[] = [
     name: "Grilled Steak with Fries",
     description: "Made from Prime Beef",
     image: "/public/lovable-uploads/a9d863ba-60fc-44bc-a430-a3693f510471.png",
-    price: "N5,000",
+    price: "Ksh300",
     rating: 4,
     isPopular: true,
   },
