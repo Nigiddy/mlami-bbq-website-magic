@@ -10,6 +10,7 @@ import {
   CarouselNext,
   CarouselPrevious
 } from './ui/carousel';
+import { useCart } from '@/contexts/CartContext';
 
 type Dish = {
   id: number;
@@ -62,6 +63,17 @@ const StarRating = ({ rating }: { rating: number }) => {
 };
 
 const PopularDishes = () => {
+  const { addItem } = useCart();
+
+  const handleAddToCart = (dish: Dish) => {
+    addItem({
+      id: dish.id,
+      name: dish.name,
+      price: dish.price,
+      image: dish.image
+    });
+  };
+
   return (
     <div className="py-16 bg-white text-gray-800">
       <div className="container mx-auto px-4">
@@ -106,6 +118,7 @@ const PopularDishes = () => {
                             size="sm" 
                             className="rounded-full bg-bbq-orange hover:bg-bbq-orange/90 hover:scale-110 transition-all duration-200 h-8 w-8 p-0 active:scale-90"
                             title="Add to cart"
+                            onClick={() => handleAddToCart(dish)}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>

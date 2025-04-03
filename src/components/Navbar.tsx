@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
+import Cart from './Cart';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,13 +21,21 @@ const Navbar = () => {
             <li><Link to="/about" className="hover:text-bbq-orange transition-colors">About</Link></li>
             <li><Link to="/contact" className="hover:text-bbq-orange transition-colors">Contact</Link></li>
           </ul>
-          <Button className="bg-black text-white rounded-full hover:bg-bbq-orange">Reserve Table</Button>
+          <div className="flex items-center gap-4">
+            <Cart />
+            <Button className="bg-black text-white rounded-full hover:bg-bbq-orange">
+              <Link to="/reservation">Reserve Table</Link>
+            </Button>
+          </div>
         </div>
         
         {/* Mobile menu button */}
-        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <Cart />
+          <button onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Navigation */}
@@ -38,7 +47,7 @@ const Navbar = () => {
               <li><Link to="/menu" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">Menu</Link></li>
               <li><Link to="/about" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">About</Link></li>
               <li><Link to="/contact" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">Contact</Link></li>
-              <li><Button className="bg-black text-white w-full rounded-full hover:bg-bbq-orange">Reserve Table</Button></li>
+              <li><Button className="bg-black text-white w-full rounded-full hover:bg-bbq-orange"><Link to="/reservation" onClick={() => setIsOpen(false)}>Reserve Table</Link></Button></li>
             </ul>
           </div>
         </div>

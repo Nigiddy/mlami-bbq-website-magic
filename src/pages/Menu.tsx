@@ -2,6 +2,7 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/contexts/CartContext';
 
 type MenuItem = {
   id: number;
@@ -64,6 +65,17 @@ const menuItems: MenuItem[] = [
 ];
 
 const Menu = () => {
+  const { addItem } = useCart();
+
+  const handleAddToCart = (item: MenuItem) => {
+    addItem({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -98,8 +110,11 @@ const Menu = () => {
                     <span className="text-bbq-orange font-medium">{item.price}</span>
                   </div>
                   <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-                  <Button className="w-full bg-black hover:bg-bbq-orange text-white rounded-full">
-                    Order Now
+                  <Button 
+                    className="w-full bg-black hover:bg-bbq-orange text-white rounded-full"
+                    onClick={() => handleAddToCart(item)}
+                  >
+                    Add to Cart
                   </Button>
                 </div>
               </div>
