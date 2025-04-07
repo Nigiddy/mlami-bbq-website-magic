@@ -1,9 +1,9 @@
 
-import { LayoutDashboard, ClipboardList, Package } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Package, QrCode } from 'lucide-react';
 
 interface AdminSidebarProps {
-  activeView: 'dashboard' | 'orders' | 'inventory';
-  setActiveView: (view: 'dashboard' | 'orders' | 'inventory') => void;
+  activeView: 'dashboard' | 'orders' | 'inventory' | 'qrcodes';
+  setActiveView: (view: 'dashboard' | 'orders' | 'inventory' | 'qrcodes') => void;
 }
 
 const AdminSidebar = ({ activeView, setActiveView }: AdminSidebarProps) => {
@@ -11,6 +11,7 @@ const AdminSidebar = ({ activeView, setActiveView }: AdminSidebarProps) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'orders', label: 'Orders', icon: ClipboardList },
     { id: 'inventory', label: 'Inventory', icon: Package },
+    { id: 'qrcodes', label: 'QR Codes', icon: QrCode },
   ];
 
   return (

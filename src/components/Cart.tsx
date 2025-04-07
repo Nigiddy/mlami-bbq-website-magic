@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { ShoppingBag, X, ShoppingCart, Phone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingBag, X, ShoppingCart, Phone, TableIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
@@ -12,41 +12,64 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { useLocation } from 'react-router-dom';
 
-const phoneSchema = z.object({
+const orderSchema = z.object({
   phoneNumber: z.string()
     .min(10, "Phone number must be at least 10 digits")
     .max(12, "Phone number must not exceed 12 digits")
-    .regex(/^(?:254|\+254|0)?(7[0-9]{8})$/, "Please enter a valid Kenyan phone number")
+    .regex(/^(?:254|\+254|0)?(7[0-9]{8})$/, "Please enter a valid Kenyan phone number"),
+  tableNumber: z.string()
+    .min(1, "Table number is required")
+    .regex(/^[1-9][0-9]*$/, "Please enter a valid table number")
 });
 
 const Cart: React.FC = () => {
-  const { items, totalItems, subtotal, clearCart } = useCart();
+  const { items, totalItems, subtotal, clearCart, tableNumber, setTableNumber } = useCart();
   const [open, setOpen] = React.useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const location = useLocation();
 
-  const form = useForm<z.infer<typeof phoneSchema>>({
-    resolver: zodResolver(phoneSchema),
+  const form = useForm<z.infer<typeof orderSchema>>({
+    resolver: zodResolver(orderSchema),
     defaultValues: {
       phoneNumber: '',
+      tableNumber: tableNumber || '',
     },
   });
 
-  const initiateSTKPush = async (values: z.infer<typeof phoneSchema>) => {
+  // Update form when tableNumber changes in context
+  useEffect(() => {
+    if (tableNumber) {
+      form.setValue('tableNumber', tableNumber);
+    }
+
+    // Parse URL for table param
+    const params = new URLSearchParams(location.search);
+    const tableParam = params.get('table');
+    if (tableParam && !tableNumber) {
+      setTableNumber(tableParam);
+      form.setValue('tableNumber', tableParam);
+    }
+  }, [tableNumber, form, location.search, setTableNumber]);
+
+  const initiateSTKPush = async (values: z.infer<typeof orderSchema>) => {
     setIsProcessing(true);
     try {
-      // Format phone number to ensure it's in the correct format (254XXXXXXXXX)
+      // Format phone number
       let phoneNumber = values.phoneNumber;
       if (phoneNumber.startsWith('0')) {
         phoneNumber = '254' + phoneNumber.substring(1);
       } else if (phoneNumber.startsWith('+254')) {
         phoneNumber = phoneNumber.substring(1);
       }
-
-      // In a real implementation, this would make an API call to your backend
-      // which would then call the Mpesa Daraja API
-      console.log('Initiating STK Push to phone:', phoneNumber, 'for amount:', subtotal);
+      
+      // In a real implementation, this would send both phone and table number
+      console.log('Initiating STK Push to phone:', phoneNumber, 'for amount:', subtotal, 'Table:', values.tableNumber);
+      
+      // Update the table number in context
+      setTableNumber(values.tableNumber);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -54,7 +77,7 @@ const Cart: React.FC = () => {
       // Show success message
       toast({
         title: "STK Push Sent",
-        description: "Please check your phone to complete the payment",
+        description: `Please check your phone to complete the payment for Table #${values.tableNumber}`,
       });
     } catch (error) {
       console.error('STK Push failed:', error);
@@ -88,12 +111,13 @@ const Cart: React.FC = () => {
         </Button>
       </DrawerTrigger>
       
-      <DrawerContent className="max-h-[85vh] flex flex-col">
+      <DrawerContent className="max-h-[85vh] flex flex-col backdrop-blur-md bg-white/90 border-t border-white/20">
         <div className="container max-w-md mx-auto">
           <DrawerHeader className="flex items-center justify-between border-b pb-4">
             <DrawerTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
               Your Cart
+              {tableNumber && <span className="text-sm text-gray-500">(Table #{tableNumber})</span>}
             </DrawerTitle>
             <Button 
               variant="ghost" 
@@ -139,6 +163,30 @@ const Cart: React.FC = () => {
                   <form onSubmit={form.handleSubmit(initiateSTKPush)} className="space-y-4">
                     <FormField
                       control={form.control}
+                      name="tableNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Table Number</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center space-x-2">
+                              <TableIcon className="h-4 w-4 text-gray-500" />
+                              <Input 
+                                placeholder="e.g. 5" 
+                                {...field} 
+                                className="flex-1 backdrop-blur-sm bg-white/40"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormDescription className="text-xs text-gray-500">
+                            Enter your table number (can be found on your table)
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
                       name="phoneNumber"
                       render={({ field }) => (
                         <FormItem>
@@ -149,7 +197,7 @@ const Cart: React.FC = () => {
                               <Input 
                                 placeholder="e.g. 0712345678" 
                                 {...field} 
-                                className="flex-1"
+                                className="flex-1 backdrop-blur-sm bg-white/40"
                               />
                             </div>
                           </FormControl>
@@ -163,7 +211,7 @@ const Cart: React.FC = () => {
                     <div className="flex flex-col gap-2">
                       <Button 
                         type="submit" 
-                        className="w-full bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                        className="w-full bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2 backdrop-blur-sm"
                         disabled={isProcessing}
                       >
                         {isProcessing ? "Processing..." : "Pay with M-Pesa"}
@@ -173,7 +221,7 @@ const Cart: React.FC = () => {
                         type="button"
                         variant="outline" 
                         onClick={clearCart}
-                        className="w-full"
+                        className="w-full backdrop-blur-sm bg-white/40"
                         disabled={isProcessing}
                       >
                         Clear Cart

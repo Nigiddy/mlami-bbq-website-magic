@@ -1,9 +1,12 @@
 
+import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { Plus } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 type MenuItem = {
   id: number;
@@ -67,13 +70,31 @@ const menuItems: MenuItem[] = [
 
 const Menu = () => {
   const { addItem } = useCart();
+  const location = useLocation();
+  const { toast } = useToast();
+  const [tableNumber, setTableNumber] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Parse table number from URL query parameters
+    const params = new URLSearchParams(location.search);
+    const table = params.get('table');
+    
+    if (table) {
+      setTableNumber(table);
+      toast({
+        title: "Table Detected",
+        description: `You are ordering from Table #${table}`,
+      });
+    }
+  }, [location.search, toast]);
 
   const handleAddToCart = (item: MenuItem) => {
     addItem({
       id: item.id,
       name: item.name,
       price: item.price,
-      image: item.image
+      image: item.image,
+      tableNumber: tableNumber
     });
   };
 
@@ -86,6 +107,7 @@ const Menu = () => {
           <div className="container mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-medium mb-4">
               <span className="font-dancing text-bbq-orange">Our</span> Menu
+              {tableNumber && <span className="ml-2 text-2xl font-normal">(Table #{tableNumber})</span>}
             </h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Explore our delicious BBQ dishes made with love and the finest ingredients.
