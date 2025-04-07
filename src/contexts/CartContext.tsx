@@ -106,11 +106,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Calculate total number of items
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
   
-  // Calculate subtotal (assuming price is in format "$XX.XX")
+  // Calculate subtotal (assuming price is in numeric format for Kenyan Shillings)
   const subtotal = items.reduce((total, item) => {
     const price = parseFloat(item.price.replace(/[^0-9.]/g, ''));
     return total + (price * item.quantity);
-  }, 0).toFixed(2);
+  }, 0).toFixed(0); // No decimal places for Kenyan Shillings
   
   const value = {
     items,

@@ -19,7 +19,7 @@ const menuItems: MenuItem[] = [
     id: 1,
     name: "Smoked Brisket",
     description: "Slow-smoked for 12 hours, our signature brisket melts in your mouth",
-    price: "$18.99",
+    price: "1899",
     image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
     category: "BBQ Specialties"
   },
@@ -27,7 +27,7 @@ const menuItems: MenuItem[] = [
     id: 2,
     name: "Pulled Pork Sandwich",
     description: "Hand-pulled pork shoulder with our signature BBQ sauce",
-    price: "$14.99",
+    price: "1499",
     image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
     category: "BBQ Specialties"
   },
@@ -35,7 +35,7 @@ const menuItems: MenuItem[] = [
     id: 3,
     name: "BBQ Ribs",
     description: "Fall-off-the-bone tender ribs with our signature dry rub",
-    price: "$22.99",
+    price: "2299",
     image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
     category: "BBQ Specialties"
   },
@@ -43,7 +43,7 @@ const menuItems: MenuItem[] = [
     id: 4,
     name: "Grilled Chicken",
     description: "Juicy grilled chicken with herbs and spices",
-    price: "$16.99",
+    price: "1699",
     image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
     category: "BBQ Specialties"
   },
@@ -51,7 +51,7 @@ const menuItems: MenuItem[] = [
     id: 5,
     name: "BBQ Chicken Wings",
     description: "Crispy wings tossed in our signature BBQ sauce",
-    price: "$12.99",
+    price: "1299",
     image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
     category: "Starters"
   },
@@ -59,7 +59,7 @@ const menuItems: MenuItem[] = [
     id: 6,
     name: "Loaded Fries",
     description: "Crispy fries topped with cheese, bacon, and scallions",
-    price: "$8.99",
+    price: "899",
     image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
     category: "Sides"
   },
@@ -108,7 +108,7 @@ const Menu = () => {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-medium">{item.name}</h3>
-                    <span className="text-bbq-orange font-medium">{item.price}</span>
+                    <span className="text-bbq-orange font-medium">Ksh {item.price}</span>
                   </div>
                   <p className="text-gray-600 text-sm mb-4">{item.description}</p>
                   <div className="flex justify-end">

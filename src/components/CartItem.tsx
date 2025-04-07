@@ -23,7 +23,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
       
       <div className="flex-grow">
         <h4 className="font-medium">{item.name}</h4>
-        <p className="text-bbq-orange font-medium">{item.price}</p>
+        <p className="text-bbq-orange font-medium">Ksh {item.price.replace(/\$/g, '')}</p>
       </div>
       
       <div className="flex items-center gap-2">
