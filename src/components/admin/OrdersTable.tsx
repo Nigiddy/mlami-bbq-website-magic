@@ -3,14 +3,17 @@ import { useState } from 'react';
 import { Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/contexts/CartContext';
 
 interface OrdersTableProps {
-  orders: any[];
-  onSelectOrder: (id: number) => void;
-  showPagination: boolean;
+  orders?: any[];
+  onSelectOrder?: (id: number) => void;
+  showPagination?: boolean;
 }
 
-const OrdersTable = ({ orders, onSelectOrder, showPagination }: OrdersTableProps) => {
+const OrdersTable = ({ orders: propOrders, onSelectOrder = () => {}, showPagination = true }: OrdersTableProps) => {
+  const { orders: contextOrders } = useCart();
+  const orders = propOrders || contextOrders || [];
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
   
