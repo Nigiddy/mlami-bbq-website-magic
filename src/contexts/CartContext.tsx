@@ -8,6 +8,7 @@ export type CartItem = {
   image: string;
   quantity?: number;
   tableNumber?: string | null;
+  inStock?: boolean; // Added inStock property
 };
 
 type OrderItem = CartItem & {
