@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
+import { Plus } from 'lucide-react';
 
 type MenuItem = {
   id: number;
@@ -110,12 +111,16 @@ const Menu = () => {
                     <span className="text-bbq-orange font-medium">{item.price}</span>
                   </div>
                   <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-                  <Button 
-                    className="w-full bg-black hover:bg-bbq-orange text-white rounded-full"
-                    onClick={() => handleAddToCart(item)}
-                  >
-                    Add to Cart
-                  </Button>
+                  <div className="flex justify-end">
+                    <Button 
+                      size="sm"
+                      className="rounded-full bg-black hover:bg-bbq-orange text-white h-10 w-10 p-0 flex items-center justify-center transition-all duration-300 hover:scale-110"
+                      title="Add to cart"
+                      onClick={() => handleAddToCart(item)}
+                    >
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
