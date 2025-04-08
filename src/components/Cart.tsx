@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, X, ShoppingCart, Phone, TableIcon } from 'lucide-react';
+import { ShoppingBag, X, ShoppingCart, Phone, TableIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useLocation } from 'react-router-dom';
+import { useMpesaTransaction } from '@/hooks/useMpesaTransaction';
 
 const orderSchema = z.object({
   phoneNumber: z.string()
@@ -27,9 +28,16 @@ const orderSchema = z.object({
 const Cart: React.FC = () => {
   const { items, totalItems, subtotal, clearCart, tableNumber, setTableNumber } = useCart();
   const [open, setOpen] = React.useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
+  const { 
+    initiatePayment, 
+    checkStatus, 
+    resetTransaction,
+    isProcessing, 
+    checkoutRequestId 
+  } = useMpesaTransaction();
+  const [paymentSent, setPaymentSent] = useState(false);
 
   const form = useForm<z.infer<typeof orderSchema>>({
     resolver: zodResolver(orderSchema),
@@ -54,41 +62,56 @@ const Cart: React.FC = () => {
     }
   }, [tableNumber, form, location.search, setTableNumber]);
 
-  const initiateSTKPush = async (values: z.infer<typeof orderSchema>) => {
-    setIsProcessing(true);
-    try {
-      // Format phone number
-      let phoneNumber = values.phoneNumber;
-      if (phoneNumber.startsWith('0')) {
-        phoneNumber = '254' + phoneNumber.substring(1);
-      } else if (phoneNumber.startsWith('+254')) {
-        phoneNumber = phoneNumber.substring(1);
-      }
+  // Function to handle M-Pesa payment
+  const handleMpesaPayment = async (values: z.infer<typeof orderSchema>) => {
+    // Format cart items for the database
+    const cartItems = items.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: parseFloat(item.price),
+      quantity: item.quantity || 1
+    }));
+
+    const success = await initiatePayment({
+      phoneNumber: values.phoneNumber,
+      amount: subtotal,
+      tableNumber: values.tableNumber,
+      cartItems: cartItems
+    });
+
+    if (success) {
+      setPaymentSent(true);
       
-      // In a real implementation, this would send both phone and table number
-      console.log('Initiating STK Push to phone:', phoneNumber, 'for amount:', subtotal, 'Table:', values.tableNumber);
-      
-      // Update the table number in context
+      // Store table number in context
       setTableNumber(values.tableNumber);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Show success message
-      toast({
-        title: "STK Push Sent",
-        description: `Please check your phone to complete the payment for Table #${values.tableNumber}`,
-      });
-    } catch (error) {
-      console.error('STK Push failed:', error);
-      toast({
-        title: "Payment Failed",
-        description: "Failed to initiate M-Pesa payment. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
     }
+  };
+
+  // Function to check payment status
+  const handleCheckStatus = async () => {
+    const success = await checkStatus();
+    if (success) {
+      // Payment was successful, clear the cart
+      clearCart();
+      setOpen(false);
+      setPaymentSent(false);
+      resetTransaction();
+      
+      toast({
+        title: "Order Placed Successfully",
+        description: "Your order has been placed and will be prepared shortly.",
+      });
+    }
+  };
+
+  // Function to cancel payment and reset
+  const handleCancelPayment = () => {
+    setPaymentSent(false);
+    resetTransaction();
+    toast({
+      title: "Payment Cancelled",
+      description: "M-Pesa payment request has been cancelled.",
+    });
   };
 
   return (
@@ -159,76 +182,119 @@ const Cart: React.FC = () => {
                   <span>Ksh {subtotal}</span>
                 </div>
                 
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(initiateSTKPush)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="tableNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Table Number</FormLabel>
-                          <FormControl>
-                            <div className="flex items-center space-x-2">
-                              <TableIcon className="h-4 w-4 text-gray-500" />
-                              <Input 
-                                placeholder="e.g. 5" 
-                                {...field} 
-                                className="flex-1 backdrop-blur-sm bg-white/40"
-                              />
-                            </div>
-                          </FormControl>
-                          <FormDescription className="text-xs text-gray-500">
-                            Enter your table number (can be found on your table)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="phoneNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>M-Pesa Phone Number</FormLabel>
-                          <FormControl>
-                            <div className="flex items-center space-x-2">
-                              <Phone className="h-4 w-4 text-gray-500" />
-                              <Input 
-                                placeholder="e.g. 0712345678" 
-                                {...field} 
-                                className="flex-1 backdrop-blur-sm bg-white/40"
-                              />
-                            </div>
-                          </FormControl>
-                          <FormDescription className="text-xs text-gray-500">
-                            Enter the phone number registered with M-Pesa
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex flex-col gap-2">
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2 backdrop-blur-sm"
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? "Processing..." : "Pay with M-Pesa"}
-                        <Phone className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        type="button"
-                        variant="outline" 
-                        onClick={clearCart}
-                        className="w-full backdrop-blur-sm bg-white/40"
-                        disabled={isProcessing}
-                      >
-                        Clear Cart
-                      </Button>
+                {!paymentSent ? (
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleMpesaPayment)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="tableNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Table Number</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-2">
+                                <TableIcon className="h-4 w-4 text-gray-500" />
+                                <Input 
+                                  placeholder="e.g. 5" 
+                                  {...field} 
+                                  className="flex-1 backdrop-blur-sm bg-white/40"
+                                />
+                              </div>
+                            </FormControl>
+                            <FormDescription className="text-xs text-gray-500">
+                              Enter your table number (can be found on your table)
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>M-Pesa Phone Number</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-2">
+                                <Phone className="h-4 w-4 text-gray-500" />
+                                <Input 
+                                  placeholder="e.g. 0712345678" 
+                                  {...field} 
+                                  className="flex-1 backdrop-blur-sm bg-white/40"
+                                />
+                              </div>
+                            </FormControl>
+                            <FormDescription className="text-xs text-gray-500">
+                              Enter the phone number registered with M-Pesa
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex flex-col gap-2">
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2 backdrop-blur-sm"
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Pay with M-Pesa
+                              <Phone className="h-4 w-4" />
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          onClick={clearCart}
+                          className="w-full backdrop-blur-sm bg-white/40"
+                          disabled={isProcessing}
+                        >
+                          Clear Cart
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-md">
+                      <h4 className="font-medium mb-2">Payment Initiated</h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        An M-Pesa STK push has been sent to your phone. Please enter your PIN to complete the payment.
+                      </p>
+                      <div className="flex justify-between gap-2">
+                        <Button 
+                          onClick={handleCheckStatus}
+                          className="flex-1"
+                          variant="outline"
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Checking...
+                            </>
+                          ) : "Check Status"}
+                        </Button>
+                        <Button 
+                          onClick={handleCancelPayment}
+                          className="flex-1"
+                          variant="ghost"
+                          disabled={isProcessing}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
-                  </form>
-                </Form>
+                  </div>
+                )}
               </div>
             </DrawerFooter>
           )}

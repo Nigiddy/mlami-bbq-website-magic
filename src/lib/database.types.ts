@@ -178,6 +178,53 @@ export interface Database {
           created_at?: string
         }
       }
+      mpesa_transactions: {
+        Row: {
+          id: number
+          phone_number: string
+          amount: number
+          table_number: string | null
+          checkout_request_id: string
+          merchant_request_id: string
+          mpesa_receipt_number: string | null
+          transaction_date: string | null
+          result_description: string | null
+          status: string
+          items: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          phone_number: string
+          amount: number
+          table_number?: string | null
+          checkout_request_id: string
+          merchant_request_id: string
+          mpesa_receipt_number?: string | null
+          transaction_date?: string | null
+          result_description?: string | null
+          status?: string
+          items?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          phone_number?: string
+          amount?: number
+          table_number?: string | null
+          checkout_request_id?: string
+          merchant_request_id?: string
+          mpesa_receipt_number?: string | null
+          transaction_date?: string | null
+          result_description?: string | null
+          status?: string
+          items?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
