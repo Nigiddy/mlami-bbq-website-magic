@@ -7,72 +7,15 @@ import { useCart } from '@/contexts/CartContext';
 import { Plus } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-
-type MenuItem = {
-  id: number;
-  name: string;
-  description: string;
-  price: string;
-  image: string;
-  category: string;
-};
-
-const menuItems: MenuItem[] = [
-  {
-    id: 1,
-    name: "Smoked Brisket",
-    description: "Slow-smoked for 12 hours, our signature brisket melts in your mouth",
-    price: "1899",
-    image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
-    category: "BBQ Specialties"
-  },
-  {
-    id: 2,
-    name: "Pulled Pork Sandwich",
-    description: "Hand-pulled pork shoulder with our signature BBQ sauce",
-    price: "1499",
-    image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
-    category: "BBQ Specialties"
-  },
-  {
-    id: 3,
-    name: "BBQ Ribs",
-    description: "Fall-off-the-bone tender ribs with our signature dry rub",
-    price: "2299",
-    image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
-    category: "BBQ Specialties"
-  },
-  {
-    id: 4,
-    name: "Grilled Chicken",
-    description: "Juicy grilled chicken with herbs and spices",
-    price: "1699",
-    image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
-    category: "BBQ Specialties"
-  },
-  {
-    id: 5,
-    name: "BBQ Chicken Wings",
-    description: "Crispy wings tossed in our signature BBQ sauce",
-    price: "1299",
-    image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
-    category: "Starters"
-  },
-  {
-    id: 6,
-    name: "Loaded Fries",
-    description: "Crispy fries topped with cheese, bacon, and scallions",
-    price: "899",
-    image: "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
-    category: "Sides"
-  },
-];
+import { useMenuItems } from '@/hooks/useMenuItems';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Menu = () => {
   const { addItem } = useCart();
   const location = useLocation();
   const { toast } = useToast();
   const [tableNumber, setTableNumber] = useState<string | null>(null);
+  const { menuItems, isLoading, error } = useMenuItems();
 
   useEffect(() => {
     // Parse table number from URL query parameters
@@ -88,15 +31,40 @@ const Menu = () => {
     }
   }, [location.search, toast]);
 
-  const handleAddToCart = (item: MenuItem) => {
+  const handleAddToCart = (item: any) => {
     addItem({
       id: item.id,
       name: item.name,
-      price: item.price,
-      image: item.image,
-      tableNumber: tableNumber
+      price: item.price.toString(),
+      image: item.image_url || "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png", // Fallback image
+      tableNumber: tableNumber,
+      inStock: item.in_stock
     });
   };
+
+  // Group items by category
+  const categorizedItems = menuItems.reduce<Record<string, any[]>>((acc, item) => {
+    if (!acc[item.category_id]) {
+      acc[item.category_id] = [];
+    }
+    acc[item.category_id].push(item);
+    return acc;
+  }, {});
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-medium text-red-600">Error Loading Menu</h2>
+            <p className="mt-2">Please try again later</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -117,36 +85,58 @@ const Menu = () => {
         </div>
         
         <div className="py-16 container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {menuItems.map((item) => (
-              <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="h-48 overflow-hidden">
-                  <img 
-                    src={item.image} 
-                    alt={item.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-medium">{item.name}</h3>
-                    <span className="text-bbq-orange font-medium">Ksh {item.price}</span>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-                  <div className="flex justify-end">
-                    <Button 
-                      size="sm"
-                      className="rounded-full bg-black hover:bg-bbq-orange text-white h-10 w-10 p-0 flex items-center justify-center transition-all duration-300 hover:scale-110"
-                      title="Add to cart"
-                      onClick={() => handleAddToCart(item)}
-                    >
-                      <Plus className="h-5 w-5" />
-                    </Button>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {Array(6).fill(0).map((_, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <Skeleton className="h-48 w-full" />
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <Skeleton className="h-6 w-32" />
+                      <Skeleton className="h-6 w-16" />
+                    </div>
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4 mb-4" />
+                    <div className="flex justify-end">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {menuItems.map((item) => (
+                <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="h-48 overflow-hidden">
+                    <img 
+                      src={item.image_url || "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png"} 
+                      alt={item.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl font-medium">{item.name}</h3>
+                      <span className="text-bbq-orange font-medium">Ksh {item.price}</span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-4">{item.description}</p>
+                    <div className="flex justify-end">
+                      <Button 
+                        size="sm"
+                        disabled={!item.in_stock}
+                        className={`rounded-full ${item.in_stock ? 'bg-black hover:bg-bbq-orange' : 'bg-gray-300'} text-white h-10 w-10 p-0 flex items-center justify-center transition-all duration-300 hover:scale-110`}
+                        title={item.in_stock ? "Add to cart" : "Out of stock"}
+                        onClick={() => item.in_stock && handleAddToCart(item)}
+                      >
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
       

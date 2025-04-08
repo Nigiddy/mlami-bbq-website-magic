@@ -1,21 +1,44 @@
 
 import { ArrowUpIcon, ArrowDownIcon, Clock } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
+import { useOrders } from '@/hooks/useOrders';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const StatsCards = () => {
-  const { orders } = useCart();
+  const { orders, isLoading } = useOrders();
+  
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3].map((item) => (
+          <div key={item} className="backdrop-blur-md bg-white/60 rounded-xl p-6 shadow-lg border border-white/20">
+            <div className="flex justify-between items-start mb-4">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+            <div className="flex items-baseline">
+              <Skeleton className="h-10 w-20" />
+            </div>
+            <div className="mt-4 flex items-center">
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
   
   // Calculate stats
   const pendingOrders = orders.filter(o => ['pending', 'preparing', 'ready'].includes(o.status.toLowerCase())).length;
+  
+  const today = new Date().setHours(0, 0, 0, 0);
   const completedToday = orders.filter(o => {
-    const today = new Date().setHours(0, 0, 0, 0);
-    const orderDate = new Date(o.createdAt).setHours(0, 0, 0, 0);
+    const orderDate = new Date(o.created_at).setHours(0, 0, 0, 0);
     return orderDate === today && o.status.toLowerCase() === 'completed';
   }).length;
   
   const totalRevenue = orders
     .filter(o => o.status.toLowerCase() !== 'cancelled')
-    .reduce((sum, order) => sum + parseFloat(order.total), 0);
+    .reduce((sum, order) => sum + Number(order.total), 0);
 
   // Dummy data for trends - in real app this would be calculated from historical data
   const pendingTrend = 5.7;

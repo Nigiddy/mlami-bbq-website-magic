@@ -7,13 +7,13 @@ import OrdersTable from '@/components/admin/OrdersTable';
 import InventoryManagement from '@/components/admin/InventoryManagement';
 import QRCodeGenerator from '@/components/admin/QRCodeGenerator';
 import OrderDetails from '@/components/admin/OrderDetails';
-import { useCart } from '@/contexts/CartContext';
+import { useOrders } from '@/hooks/useOrders';
 
 const Admin = () => {
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'qrcodes'>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  const { orders } = useCart();
-
+  const { orders, isLoading } = useOrders();
+  
   const selectedOrder = selectedOrderId 
     ? orders.find(order => order.id === selectedOrderId) 
     : null;
@@ -43,13 +43,10 @@ const Admin = () => {
                     />
                   </div>
                   <div className="backdrop-blur-md bg-white/60 rounded-xl p-6 shadow-lg border border-white/20">
-                    {selectedOrder ? (
-                      <OrderDetails order={selectedOrder} />
-                    ) : (
-                      <p className="text-gray-500 text-center py-10">
-                        Select an order to view details
-                      </p>
-                    )}
+                    <OrderDetails 
+                      order={selectedOrder} 
+                      isLoading={isLoading && selectedOrderId !== null}
+                    />
                   </div>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Star, Plus } from 'lucide-react';
@@ -11,46 +12,18 @@ import {
   CarouselPrevious
 } from './ui/carousel';
 import { useCart } from '@/contexts/CartContext';
+import { supabase } from '@/lib/supabase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Dish = {
   id: number;
   name: string;
   description: string;
-  image: string;
-  price: string;
-  rating: number;
-  isPopular?: boolean;
-  isNew?: boolean;
+  image_url: string | null;
+  price: number;
+  in_stock: boolean;
+  category_id: number;
 };
-
-const dishes: Dish[] = [
-  {
-    id: 1,
-    name: "Grilled Steak with Fries",
-    description: "Made from Prime Beef",
-    image: "/public/lovable-uploads/a9d863ba-60fc-44bc-a430-a3693f510471.png",
-    price: "Ksh300",
-    rating: 4,
-    isPopular: true,
-  },
-  {
-    id: 2,
-    name: "Grilled Salad with Fries",
-    description: "Made from Fresh Salad",
-    image: "/public/lovable-uploads/a9d863ba-60fc-44bc-a430-a3693f510471.png",
-    price: "Ksh99",
-    rating: 5,
-    isNew: true,
-  },
-  {
-    id: 3,
-    name: "Grilled Steak with Fries",
-    description: "Made from Salmon",
-    image: "/public/lovable-uploads/a9d863ba-60fc-44bc-a430-a3693f510471.png",
-    price: "Ksh250",
-    rating: 4,
-  },
-];
 
 const StarRating = ({ rating }: { rating: number }) => {
   return (
@@ -64,13 +37,40 @@ const StarRating = ({ rating }: { rating: number }) => {
 
 const PopularDishes = () => {
   const { addItem } = useCart();
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPopularDishes = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch a limited number of dishes - in a real app, you might have a popularity field
+        const { data, error } = await supabase
+          .from('menu_items')
+          .select('*')
+          .limit(6);
+          
+        if (error) throw error;
+        
+        setDishes(data || []);
+      } catch (err) {
+        console.error('Error fetching popular dishes:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPopularDishes();
+  }, []);
 
   const handleAddToCart = (dish: Dish) => {
     addItem({
       id: dish.id,
       name: dish.name,
-      price: dish.price,
-      image: dish.image
+      price: dish.price.toString(),
+      image: dish.image_url || "/public/lovable-uploads/75313179-b4bc-4abc-8297-ddc74500e82f.png",
+      inStock: dish.in_stock
     });
   };
 
@@ -89,45 +89,64 @@ const PopularDishes = () => {
         <div className="max-w-5xl mx-auto">
           <Carousel className="w-full">
             <CarouselContent>
-              {dishes.map((dish) => (
-                <CarouselItem key={dish.id} className="md:basis-1/3">
-                  <Card className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:translate-y-[-5px]">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col items-center">
-                        <div className="mb-4 -mt-12 relative">
-                          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-md bg-white transition-transform duration-300 hover:scale-105">
-                            <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
+              {isLoading ? (
+                // Skeleton loading state
+                Array(3).fill(0).map((_, index) => (
+                  <CarouselItem key={index} className="md:basis-1/3">
+                    <Card className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center">
+                          <div className="mb-4 -mt-12 relative">
+                            <Skeleton className="w-28 h-28 rounded-full" />
                           </div>
-                          {dish.isPopular && (
-                            <Badge className="absolute -top-2 -right-2 bg-bbq-orange text-white border-white border-2">
-                              Popular
-                            </Badge>
-                          )}
-                          {dish.isNew && (
-                            <Badge className="absolute -top-2 -right-2 bg-green-500 text-white border-white border-2">
-                              New
-                            </Badge>
-                          )}
+                          <Skeleton className="h-4 w-20 mb-2" />
+                          <Skeleton className="h-5 w-36 mb-1" />
+                          <Skeleton className="h-4 w-24 mb-3" />
+                          <div className="flex justify-between items-center w-full mt-2">
+                            <Skeleton className="h-4 w-12" />
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                          </div>
                         </div>
-                        <StarRating rating={dish.rating} />
-                        <h3 className="text-gray-800 text-lg font-medium mt-2 mb-1">{dish.name}</h3>
-                        <p className="text-gray-600 text-sm mb-3">{dish.description}</p>
-                        <div className="flex justify-between items-center w-full mt-2">
-                          <span className="text-gray-800 font-bold">{dish.price}</span>
-                          <Button 
-                            size="sm" 
-                            className="rounded-full bg-bbq-orange hover:bg-bbq-orange/90 hover:scale-110 transition-all duration-200 h-8 w-8 p-0 active:scale-90"
-                            title="Add to cart"
-                            onClick={() => handleAddToCart(dish)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))
+              ) : (
+                dishes.map((dish) => (
+                  <CarouselItem key={dish.id} className="md:basis-1/3">
+                    <Card className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:translate-y-[-5px]">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center">
+                          <div className="mb-4 -mt-12 relative">
+                            <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-md bg-white transition-transform duration-300 hover:scale-105">
+                              <img 
+                                src={dish.image_url || "/public/lovable-uploads/a9d863ba-60fc-44bc-a430-a3693f510471.png"} 
+                                alt={dish.name} 
+                                className="w-full h-full object-cover" 
+                              />
+                            </div>
+                          </div>
+                          <StarRating rating={Math.floor(Math.random() * 2) + 4} /> {/* Random rating between 4-5 */}
+                          <h3 className="text-gray-800 text-lg font-medium mt-2 mb-1">{dish.name}</h3>
+                          <p className="text-gray-600 text-sm mb-3">{dish.description}</p>
+                          <div className="flex justify-between items-center w-full mt-2">
+                            <span className="text-gray-800 font-bold">Ksh {dish.price}</span>
+                            <Button 
+                              size="sm" 
+                              disabled={!dish.in_stock}
+                              className={`rounded-full ${dish.in_stock ? 'bg-bbq-orange hover:bg-bbq-orange/90' : 'bg-gray-300'} text-white h-8 w-8 p-0 hover:scale-110 transition-all duration-200 active:scale-90`}
+                              title={dish.in_stock ? "Add to cart" : "Out of stock"}
+                              onClick={() => dish.in_stock && handleAddToCart(dish)}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))
+              )}
             </CarouselContent>
             <CarouselPrevious className="left-0 bg-bbq-orange border-0 text-white hover:bg-bbq-orange/90 hidden data-[state=hidden]:hidden data-[state=visible]:inline-flex" />
             <CarouselNext className="right-0 bg-bbq-orange border-0 text-white hover:bg-bbq-orange/90 hidden data-[state=hidden]:hidden data-[state=visible]:inline-flex" />

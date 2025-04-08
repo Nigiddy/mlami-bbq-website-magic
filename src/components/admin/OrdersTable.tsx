@@ -3,17 +3,26 @@ import { useState } from 'react';
 import { Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/contexts/CartContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useOrders, OrderWithDetails } from '@/hooks/useOrders';
 
 interface OrdersTableProps {
-  orders?: any[];
+  orders?: OrderWithDetails[];
+  isLoading?: boolean;
   onSelectOrder?: (id: number) => void;
   showPagination?: boolean;
 }
 
-const OrdersTable = ({ orders: propOrders, onSelectOrder = () => {}, showPagination = true }: OrdersTableProps) => {
-  const { orders: contextOrders } = useCart();
+const OrdersTable = ({ 
+  orders: propOrders, 
+  isLoading: propIsLoading, 
+  onSelectOrder = () => {}, 
+  showPagination = true 
+}: OrdersTableProps) => {
+  const { orders: contextOrders, isLoading: contextIsLoading } = useOrders();
   const orders = propOrders || contextOrders || [];
+  const isLoading = propIsLoading !== undefined ? propIsLoading : contextIsLoading;
+  
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
   
@@ -33,6 +42,39 @@ const OrdersTable = ({ orders: propOrders, onSelectOrder = () => {}, showPaginat
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+  
+  if (isLoading) {
+    return (
+      <div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array(5).fill(0).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
+  }
   
   if (orders.length === 0) {
     return <p className="text-center py-4">No orders found</p>;
@@ -56,11 +98,11 @@ const OrdersTable = ({ orders: propOrders, onSelectOrder = () => {}, showPaginat
             {currentOrders.map((order) => (
               <TableRow key={order.id} className="hover:bg-white/40">
                 <TableCell>#{order.id.toString().padStart(4, '0')}</TableCell>
-                <TableCell>{order.customer.name}</TableCell>
+                <TableCell>{order.customer?.name || 'Guest'}</TableCell>
                 <TableCell>
                   <div className="flex items-center">
                     <Clock className="mr-2 h-4 w-4 text-gray-500" />
-                    {new Date(order.createdAt).toLocaleTimeString([], {
+                    {new Date(order.created_at).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}

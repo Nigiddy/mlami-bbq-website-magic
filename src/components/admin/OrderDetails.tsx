@@ -1,27 +1,58 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/contexts/CartContext';
 import { Phone } from 'lucide-react';
+import { useOrders, OrderWithDetails } from '@/hooks/useOrders';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface OrderDetailsProps {
-  order: any;
+  order: OrderWithDetails | null;
+  isLoading?: boolean;
 }
 
-const OrderDetails = ({ order }: OrderDetailsProps) => {
-  const { updateOrderStatus } = useCart();
+const OrderDetails = ({ order, isLoading = false }: OrderDetailsProps) => {
+  const { updateOrderStatus } = useOrders();
   const [isUpdating, setIsUpdating] = useState(false);
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-6 w-20 ml-auto" />
+        </div>
+        <div>
+          <Skeleton className="h-5 w-20 mb-2" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+        </div>
+        <div>
+          <Skeleton className="h-5 w-14 mb-2" />
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+          </div>
+        </div>
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <div className="pt-4 space-y-2">
+          <Skeleton className="h-5 w-32 mb-2" />
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-10 w-28 rounded-md" />
+            <Skeleton className="h-10 w-28 rounded-md" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   if (!order) {
-    return <p>Select an order to view details</p>;
+    return <p className="text-center py-8">Select an order to view details</p>;
   }
 
-  const handleStatusUpdate = (status: string) => {
+  const handleStatusUpdate = async (status: string) => {
     setIsUpdating(true);
-    setTimeout(() => {
-      updateOrderStatus(order.id, status);
-      setIsUpdating(false);
-    }, 500);
+    await updateOrderStatus(order.id, status);
+    setIsUpdating(false);
   };
 
   const getNextStatuses = () => {
@@ -42,7 +73,7 @@ const OrderDetails = ({ order }: OrderDetailsProps) => {
         <div>
           <h3 className="font-medium">Order #{order.id.toString().padStart(4, '0')}</h3>
           <p className="text-sm text-gray-500">
-            {new Date(order.createdAt).toLocaleString()}
+            {new Date(order.created_at).toLocaleString()}
           </p>
         </div>
         <div className="text-right">
@@ -62,11 +93,13 @@ const OrderDetails = ({ order }: OrderDetailsProps) => {
       <div>
         <h4 className="font-medium mb-2">Customer</h4>
         <div className="bg-white/40 rounded-lg p-3">
-          <p className="font-medium">{order.customer.name}</p>
-          <p className="flex items-center text-sm text-gray-600">
-            <Phone className="h-3 w-3 mr-1" />
-            {order.customer.phone}
-          </p>
+          <p className="font-medium">{order.customer?.name || 'Guest'}</p>
+          {order.customer?.phone && (
+            <p className="flex items-center text-sm text-gray-600">
+              <Phone className="h-3 w-3 mr-1" />
+              {order.customer.phone}
+            </p>
+          )}
         </div>
       </div>
 
@@ -74,13 +107,13 @@ const OrderDetails = ({ order }: OrderDetailsProps) => {
         <h4 className="font-medium mb-2">Items</h4>
         <div className="bg-white/40 rounded-lg overflow-hidden">
           <ul className="divide-y divide-gray-200">
-            {order.items.map((item: any, index: number) => (
+            {order.items.map((item, index) => (
               <li key={index} className="p-3 flex justify-between">
                 <div>
-                  <p className="font-medium">{item.name}</p>
+                  <p className="font-medium">{item.menu_item?.name || 'Item #' + item.menu_item_id}</p>
                   <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
                 </div>
-                <p className="font-medium">Ksh {item.price.replace(/\$/g, '')}</p>
+                <p className="font-medium">Ksh {item.price}</p>
               </li>
             ))}
           </ul>
