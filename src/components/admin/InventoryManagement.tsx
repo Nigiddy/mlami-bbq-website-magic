@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toggle } from '@/components/ui/toggle';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { MenuItem } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +23,10 @@ const InventoryManagement = () => {
   const fetchMenuItems = async () => {
     try {
       setIsLoading(true);
+      
+      // Safely get the Supabase client
+      const supabase = getSupabaseClient();
+      
       const { data, error } = await supabase
         .from('menu_items')
         .select('*');
@@ -45,6 +49,9 @@ const InventoryManagement = () => {
   const handleAvailabilityToggle = async (id: number, inStock: boolean) => {
     try {
       setIsUpdating(id);
+      
+      // Safely get the Supabase client
+      const supabase = getSupabaseClient();
       
       const { error } = await supabase
         .from('menu_items')

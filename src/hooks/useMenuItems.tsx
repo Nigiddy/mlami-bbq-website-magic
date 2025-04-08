@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { MenuItem } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,6 +14,9 @@ export const useMenuItems = () => {
     const fetchMenuItems = async () => {
       try {
         setIsLoading(true);
+        
+        // Safely get the Supabase client
+        const supabase = getSupabaseClient();
         
         const { data, error } = await supabase
           .from('menu_items')

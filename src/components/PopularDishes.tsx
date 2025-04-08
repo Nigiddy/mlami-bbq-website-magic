@@ -12,7 +12,7 @@ import {
   CarouselPrevious
 } from './ui/carousel';
 import { useCart } from '@/contexts/CartContext';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Dish = {
@@ -45,17 +45,24 @@ const PopularDishes = () => {
       try {
         setIsLoading(true);
         
-        // Fetch a limited number of dishes - in a real app, you might have a popularity field
-        const { data, error } = await supabase
-          .from('menu_items')
-          .select('*')
-          .limit(6);
+        try {
+          // Safely get the Supabase client
+          const supabase = getSupabaseClient();
           
-        if (error) throw error;
-        
-        setDishes(data || []);
-      } catch (err) {
-        console.error('Error fetching popular dishes:', err);
+          // Fetch a limited number of dishes - in a real app, you might have a popularity field
+          const { data, error } = await supabase
+            .from('menu_items')
+            .select('*')
+            .limit(6);
+            
+          if (error) throw error;
+          
+          setDishes(data || []);
+        } catch (err) {
+          // If there's an error with Supabase, set empty dishes array
+          console.error('Error fetching popular dishes:', err);
+          setDishes([]);
+        }
       } finally {
         setIsLoading(false);
       }

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { Order, OrderItem } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,6 +27,9 @@ export const useOrders = () => {
     const fetchOrders = async () => {
       try {
         setIsLoading(true);
+        
+        // Safely get the Supabase client
+        const supabase = getSupabaseClient();
         
         // Fetch orders with customer info
         const { data: ordersData, error: ordersError } = await supabase
@@ -93,6 +96,9 @@ export const useOrders = () => {
 
   const updateOrderStatus = async (id: number, status: string) => {
     try {
+      // Safely get the Supabase client
+      const supabase = getSupabaseClient();
+      
       const { error } = await supabase
         .from('orders')
         .update({ status })

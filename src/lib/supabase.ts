@@ -6,7 +6,23 @@ import { Database } from './database.types';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// Check if environment variables are available
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables. Make sure your project is connected to Supabase.');
+}
+
+// Create client with basic error handling
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey)
+  : null;
+
+// Function to safely use Supabase client
+export const getSupabaseClient = () => {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized. Check your environment variables.');
+  }
+  return supabase;
+};
 
 // Types for our database tables
 export type Category = {
