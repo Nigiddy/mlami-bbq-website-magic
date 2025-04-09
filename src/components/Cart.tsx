@@ -4,7 +4,7 @@ import { ShoppingBag, X, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
-import { useCart } from '@/contexts/CartContext';
+import { useCart } from '@/contexts/cart'; // Updated import to use new structure
 import CartItem from './CartItem';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/contexts/CartContext';
+import { useCart } from '@/contexts/cart'; // Updated import to use new structure
 import { Plus } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +10,7 @@ import Contact from "./pages/Contact";
 import Reservation from "./pages/Reservation";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
-import { CartProvider } from "./contexts/CartContext";
+import { CartProvider } from "./contexts/cart";
 
 const queryClient = new QueryClient();
 
