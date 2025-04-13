@@ -2,14 +2,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
-// These environment variables are automatically injected by Lovable when you connect to Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Check if environment variables are available
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables. Make sure your project is connected to Supabase.');
-}
+// Supabase connection details
+const supabaseUrl = "https://pzlfeqyzuftvrujcjetq.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6bGZlcXl6dWZ0dnJ1amNqZXRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyNjk3MTMsImV4cCI6MjA1OTg0NTcxM30.z3DZRtqqWIhkZfKsaXAwLHJinGtdO4Lbe8Zx90YYcxo";
 
 // Create client with basic error handling
 export const supabase = supabaseUrl && supabaseAnonKey 
@@ -83,5 +78,18 @@ export type OrderItem = {
   created_at: string;
 };
 
-// Create a database.types.ts placeholder file
-// This would typically be generated from Supabase CLI, but for now we'll create a simple placeholder
+export type MpesaTransaction = {
+  id: number;
+  phone_number: string;
+  amount: number;
+  table_number: string | null;
+  checkout_request_id: string;
+  merchant_request_id: string;
+  mpesa_receipt_number: string | null;
+  transaction_date: string | null;
+  result_description: string | null;
+  status: string;
+  items: any | null;
+  created_at: string;
+  updated_at: string;
+};
