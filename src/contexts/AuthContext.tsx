@@ -3,7 +3,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type AuthContextType = {
   user: User | null;
@@ -11,6 +11,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   isLoading: boolean;
+  isAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,15 +19,44 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   signIn: async () => {},
   signOut: async () => {},
-  isLoading: true
+  isLoading: true,
+  isAdmin: false
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if user has admin role
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) throw error;
+        setIsAdmin(data.role === 'admin');
+      } catch (error: any) {
+        console.error("Error checking user role:", error);
+        setIsAdmin(false);
+      }
+    };
+    
+    checkUserRole();
+  }, [user]);
 
   useEffect(() => {
     // Set up initial session
@@ -43,10 +73,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Redirect logic
+      // Redirect logic for authentication events
       if (event === 'SIGNED_IN') {
-        navigate('/admin');
+        // For sign-ins, we'll redirect in the signIn function for better control
+        console.log("User signed in", session?.user?.email);
       } else if (event === 'SIGNED_OUT') {
+        toast({
+          title: 'Logged Out',
+          description: 'You have been successfully logged out',
+        });
         navigate('/');
       }
     });
@@ -54,22 +89,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
+      // Redirect with state handling
+      const from = location.state?.from?.pathname || "/admin";
+      navigate(from, { replace: true });
+
       toast({
         title: 'Login Successful',
         description: 'Welcome to the admin dashboard',
       });
+      
+      return;
     } catch (error: any) {
       toast({
         title: 'Login Failed',
@@ -88,10 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      toast({
-        title: 'Logged Out',
-        description: 'You have been successfully logged out',
-      });
+      // Toast notification is handled in the onAuthStateChange listener
     } catch (error: any) {
       toast({
         title: 'Logout Failed',
@@ -104,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signOut, isLoading }}>
+    <AuthContext.Provider value={{ user, session, signIn, signOut, isLoading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

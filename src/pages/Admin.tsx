@@ -10,12 +10,21 @@ import QRCodeGenerator from '@/components/admin/QRCodeGenerator';
 import OrderDetails from '@/components/admin/OrderDetails';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/contexts/AuthContext';
+import { LogOut, UserCircle } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 const Admin = () => {
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'qrcodes'>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { orders, isLoading } = useOrders();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   
   const selectedOrder = selectedOrderId 
     ? orders.find(order => order.id === selectedOrderId) 
@@ -35,9 +44,26 @@ const Admin = () => {
                 {activeView === 'inventory' && 'Inventory Management'}
                 {activeView === 'qrcodes' && 'QR Code Generator'}
               </h1>
-              <Button variant="destructive" onClick={signOut}>
-                Logout
-              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <UserCircle className="h-5 w-5" />
+                    {user?.email?.split('@')[0]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive cursor-pointer"
+                    onClick={signOut}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             {activeView === 'dashboard' && (
