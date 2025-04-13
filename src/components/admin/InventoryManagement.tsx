@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Plus, Edit, BadgePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toggle } from '@/components/ui/toggle';
@@ -8,6 +8,7 @@ import { getSupabaseClient } from '@/lib/supabase';
 import { MenuItem } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import MenuItemForm from './MenuItemForm';
 
 const InventoryManagement = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -15,6 +16,9 @@ const InventoryManagement = () => {
   const [search, setSearch] = useState('');
   const [isUpdating, setIsUpdating] = useState<number | null>(null);
   const { toast } = useToast();
+  
+  const [showForm, setShowForm] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | undefined>(undefined);
 
   useEffect(() => {
     fetchMenuItems();
@@ -82,20 +86,66 @@ const InventoryManagement = () => {
     }
   };
 
+  const handleAddItem = () => {
+    setSelectedItem(undefined);
+    setShowForm(true);
+  };
+
+  const handleEditItem = (item: MenuItem) => {
+    setSelectedItem(item);
+    setShowForm(true);
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setSelectedItem(undefined);
+  };
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    setSelectedItem(undefined);
+    fetchMenuItems();
+  };
+
   const filteredItems = menuItems
     ? menuItems.filter(item => 
         item.name.toLowerCase().includes(search.toLowerCase())
       )
     : [];
 
+  if (showForm) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">{selectedItem ? 'Edit Menu Item' : 'Add New Menu Item'}</h2>
+          <Button variant="outline" onClick={handleFormCancel}>Back to List</Button>
+        </div>
+        <MenuItemForm 
+          menuItem={selectedItem} 
+          onSuccess={handleFormSuccess} 
+          onCancel={handleFormCancel} 
+        />
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Input
-          placeholder="Search menu items..."
-          disabled
-          className="pl-10"
-        />
+        <div className="flex justify-between items-center mb-4">
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Search menu items..."
+              disabled
+              className="pl-10"
+            />
+          </div>
+          <Button disabled className="ml-2">
+            <BadgePlus className="mr-2 h-4 w-4" />
+            Add Item
+          </Button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array(6).fill(0).map((_, index) => (
             <div key={index} className="bg-white/40 rounded-lg overflow-hidden flex">
@@ -114,14 +164,20 @@ const InventoryManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        <Input
-          placeholder="Search menu items..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex justify-between items-center mb-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Input
+            placeholder="Search menu items..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Button className="ml-2" onClick={handleAddItem}>
+          <BadgePlus className="mr-2 h-4 w-4" />
+          Add Item
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -134,13 +190,12 @@ const InventoryManagement = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="p-3 flex-1 flex flex-col justify-between">
+            <div className="p-3 flex-1 flex flex-col justify-between relative">
               <div>
                 <h3 className="font-medium">{item.name}</h3>
-                <p className="text-bbq-orange">Ksh {item.price}</p>
+                <p className="text-bbq-orange">Ksh {(item.price / 100).toFixed(2)}</p>
               </div>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-sm text-gray-600">Availability:</span>
                 <Toggle
                   aria-label="Toggle item availability"
                   pressed={item.in_stock}
@@ -150,6 +205,14 @@ const InventoryManagement = () => {
                 >
                   {item.in_stock ? 'In Stock' : 'Out of Stock'}
                 </Toggle>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8" 
+                  onClick={() => handleEditItem(item)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
