@@ -39,12 +39,6 @@ const Login = () => {
   const { signIn, isLoading, user } = useAuth();
   const location = useLocation();
 
-  // If user is already logged in, redirect to the intended destination or admin
-  if (user) {
-    const redirectTo = location.state?.from?.pathname || "/admin";
-    return <Navigate to={redirectTo} replace />;
-  }
-
   // Initialize login form with zod resolver
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -112,6 +106,13 @@ const Login = () => {
       // Error is already handled in AuthContext
     }
   };
+
+  // If user is already logged in, redirect to the intended destination or admin
+  // IMPORTANT: We need to place this conditional AFTER all hook calls to avoid React hooks errors
+  if (user) {
+    const redirectTo = location.state?.from?.pathname || "/admin";
+    return <Navigate to={redirectTo} replace />;
+  }
 
   return (
     <Layout>
