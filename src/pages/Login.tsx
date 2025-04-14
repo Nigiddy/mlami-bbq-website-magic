@@ -21,6 +21,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// Validation schema for login
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
 // Validation schema for signup
 const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -39,8 +45,17 @@ const Login = () => {
     return <Navigate to={redirectTo} replace />;
   }
 
-  // Initialize form with zod resolver
-  const form = useForm<z.infer<typeof signupSchema>>({
+  // Initialize login form with zod resolver
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    }
+  });
+
+  // Initialize signup form with zod resolver
+  const signupForm = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       email: '',
@@ -90,7 +105,7 @@ const Login = () => {
   };
 
   // Handle login
-  const onLogin = async (values: z.infer<typeof signupSchema>) => {
+  const onLogin = async (values: z.infer<typeof loginSchema>) => {
     try {
       await signIn(values.email, values.password);
     } catch (error) {
@@ -116,15 +131,15 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           
-          <Form {...form}>
-            <form 
-              onSubmit={form.handleSubmit(isSignup ? onSignup : onLogin)} 
-              className="space-y-4"
-            >
-              <CardContent className="space-y-4">
-                {isSignup && (
+          {isSignup ? (
+            <Form {...signupForm}>
+              <form 
+                onSubmit={signupForm.handleSubmit(onSignup)} 
+                className="space-y-4"
+              >
+                <CardContent className="space-y-4">
                   <FormField
-                    control={form.control}
+                    control={signupForm.control}
                     name="full_name"
                     render={({ field }) => (
                       <FormItem>
@@ -140,76 +155,143 @@ const Login = () => {
                       </FormItem>
                     )}
                   />
-                )}
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="admin@example.com" 
-                          {...field} 
-                          autoComplete="username"
-                          className="bg-background"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={signupForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="admin@example.com" 
+                            {...field} 
+                            autoComplete="username"
+                            className="bg-background"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={signupForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            placeholder="••••••••" 
+                            {...field} 
+                            autoComplete="new-password"
+                            className="bg-background"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
                 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••" 
-                          {...field} 
-                          autoComplete="current-password"
-                          className="bg-background"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-              
-              <CardFooter className="flex flex-col space-y-2">
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isLoading}
-                >
-                  {isLoading 
-                    ? (isSignup ? 'Creating Account...' : 'Logging in...') 
-                    : (isSignup 
-                      ? <><UserPlus className="w-4 h-4 mr-2" /> Create Account</> 
-                      : <><ArrowRight className="w-4 h-4 mr-2" /> Login</>)
-                  }
-                </Button>
+                <CardFooter className="flex flex-col space-y-2">
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isLoading}
+                  >
+                    {isLoading 
+                      ? 'Creating Account...'
+                      : <><UserPlus className="w-4 h-4 mr-2" /> Create Account</>
+                    }
+                  </Button>
 
-                <Button 
-                  type="button" 
-                  variant="link" 
-                  onClick={() => setIsSignup(!isSignup)}
-                  className="text-sm"
-                >
-                  {isSignup 
-                    ? 'Already have an account? Login' 
-                    : 'Need an account? Sign Up'}
-                </Button>
-              </CardFooter>
-            </form>
-          </Form>
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    onClick={() => setIsSignup(false)}
+                    className="text-sm"
+                  >
+                    Already have an account? Login
+                  </Button>
+                </CardFooter>
+              </form>
+            </Form>
+          ) : (
+            <Form {...loginForm}>
+              <form 
+                onSubmit={loginForm.handleSubmit(onLogin)} 
+                className="space-y-4"
+              >
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={loginForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="admin@example.com" 
+                            {...field} 
+                            autoComplete="username"
+                            className="bg-background"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            placeholder="••••••••" 
+                            {...field} 
+                            autoComplete="current-password"
+                            className="bg-background"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+                
+                <CardFooter className="flex flex-col space-y-2">
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isLoading}
+                  >
+                    {isLoading 
+                      ? 'Logging in...'
+                      : <><ArrowRight className="w-4 h-4 mr-2" /> Login</>
+                    }
+                  </Button>
+
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    onClick={() => setIsSignup(true)}
+                    className="text-sm"
+                  >
+                    Need an account? Sign Up
+                  </Button>
+                </CardFooter>
+              </form>
+            </Form>
+          )}
         </Card>
       </div>
     </Layout>
