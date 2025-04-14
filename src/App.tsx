@@ -37,8 +37,8 @@ const ProtectedRoute = ({
     );
   }
 
-  // Not authenticated - redirect to login
-  if (!user) {
+  // Not authenticated - redirect to login for admin routes
+  if (!user && requireAdmin) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
