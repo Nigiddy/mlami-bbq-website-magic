@@ -41,14 +41,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       try {
-        const { data, error } = await supabase
+        // First check if the user exists in the profiles table
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
         
-        if (error) throw error;
-        setIsAdmin(data.role === 'admin');
+        if (profileError) {
+          // If no profile found, create one with default role
+          if (profileError.code === 'PGRST116') {
+            console.log("Creating profile for user:", user.email);
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                email: user.email,
+                role: 'user' // Default role
+              });
+            
+            if (insertError) throw insertError;
+            setIsAdmin(false);
+          } else {
+            throw profileError;
+          }
+        } else {
+          setIsAdmin(profileData?.role === 'admin');
+        }
       } catch (error: any) {
         console.error("Error checking user role:", error);
         setIsAdmin(false);

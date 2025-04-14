@@ -38,15 +38,18 @@ const ProtectedRoute = ({
   }
 
   // Not authenticated - redirect to login for admin routes
-  if (!user && requireAdmin) {
+  if (!user) {
+    console.log("User not authenticated, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Admin route check
   if (requireAdmin && !isAdmin) {
+    console.log("User not admin, redirecting to home");
     return <Navigate to="/" replace />;
   }
 
+  console.log("Protected route rendering children, user:", user.email);
   return <>{children}</>;
 };
 

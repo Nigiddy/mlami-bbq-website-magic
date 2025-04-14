@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -61,7 +61,7 @@ const Login = () => {
   // Handle signup
   const onSignup = async (values: z.infer<typeof signupSchema>) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -73,11 +73,15 @@ const Login = () => {
 
       if (error) throw error;
 
-      // Update profile with full_name
+      // Create profile record
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ full_name: values.full_name })
-        .eq('email', values.email);
+        .insert({ 
+          id: data.user?.id,
+          full_name: values.full_name,
+          email: values.email,
+          role: 'user' // Default role
+        });
 
       if (profileError) throw profileError;
 
@@ -113,6 +117,14 @@ const Login = () => {
     const redirectTo = location.state?.from?.pathname || "/admin";
     return <Navigate to={redirectTo} replace />;
   }
+
+  // Debug: Log login state
+  useEffect(() => {
+    if (user) {
+      console.log("User is authenticated:", user.email);
+      console.log("Redirecting to:", location.state?.from?.pathname || "/admin");
+    }
+  }, [user, location.state?.from?.pathname]);
 
   return (
     <Layout>
