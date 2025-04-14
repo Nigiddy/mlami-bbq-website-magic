@@ -321,6 +321,10 @@ export type Database = {
         }
         Returns: number
       }
+      set_user_as_admin: {
+        Args: { user_email: string }
+        Returns: undefined
+      }
       update_menu_item_stock: {
         Args: { p_item_id: number; p_in_stock: boolean }
         Returns: boolean

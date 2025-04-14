@@ -8,6 +8,7 @@ import OrdersTable from '@/components/admin/OrdersTable';
 import InventoryManagement from '@/components/admin/InventoryManagement';
 import QRCodeGenerator from '@/components/admin/QRCodeGenerator';
 import OrderDetails from '@/components/admin/OrderDetails';
+import UserRoles from '@/components/admin/UserRoles';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogOut, UserCircle } from 'lucide-react';
@@ -21,7 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const Admin = () => {
-  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'qrcodes'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'qrcodes' | 'users'>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { orders, isLoading } = useOrders();
   const { user, signOut } = useAuth();
@@ -43,6 +44,7 @@ const Admin = () => {
                 {activeView === 'orders' && 'Orders'}
                 {activeView === 'inventory' && 'Inventory Management'}
                 {activeView === 'qrcodes' && 'QR Code Generator'}
+                {activeView === 'users' && 'User Management'}
               </h1>
               
               <DropdownMenu>
@@ -93,6 +95,7 @@ const Admin = () => {
             
             {activeView === 'inventory' && <InventoryManagement />}
             {activeView === 'qrcodes' && <QRCodeGenerator />}
+            {activeView === 'users' && <UserRoles />}
           </div>
         </div>
       </div>
