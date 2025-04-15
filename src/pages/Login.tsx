@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
-import { useLocation, Navigate } from 'react-router-dom';
+import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { LockKeyhole } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 // Import the refactored components
 import LoginForm from '@/components/auth/LoginForm';
@@ -27,8 +27,19 @@ const signupSchema = z.object({
 
 const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
-  const { signIn, isLoading, user, isAdmin } = useAuth();
+  const { signIn, isLoading, user, isAdmin, roleChecked } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const from = location.state?.from?.pathname || "/admin";
+
+  // Effect to handle redirection after authentication is complete
+  useEffect(() => {
+    if (user && roleChecked) {
+      console.log("Login page: User authenticated and role checked. isAdmin:", isAdmin);
+      console.log("Redirecting to:", from);
+      navigate(from, { replace: true });
+    }
+  }, [user, roleChecked, isAdmin, navigate, from]);
 
   // Handle signup
   const handleSignup = async (values: z.infer<typeof signupSchema>) => {
@@ -78,6 +89,7 @@ const Login = () => {
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
     try {
       await signIn(values.email, values.password);
+      // The redirection is handled in the useEffect above
     } catch (error) {
       // Error is already handled in AuthContext
     }
@@ -86,13 +98,10 @@ const Login = () => {
   // Toggle between login and signup forms
   const toggleForm = () => setIsSignup(!isSignup);
   
-  // Determine where to redirect after login
-  const redirectTo = location.state?.from?.pathname || "/admin";
-  
-  // Render redirect if user is authenticated
-  if (user) {
-    console.log("User is authenticated, redirecting to:", redirectTo, "isAdmin:", isAdmin);
-    return <Navigate to={redirectTo} replace />;
+  // Don't immediately redirect - wait for roleChecked to be true
+  if (user && roleChecked) {
+    console.log("Login rendering redirect to:", from);
+    return <Navigate to={from} replace />;
   }
 
   return (

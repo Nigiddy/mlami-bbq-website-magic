@@ -110,11 +110,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Redirect logic for authentication events
       if (event === 'SIGNED_IN') {
-        // For sign-ins, we'll redirect in the signIn function for better control
         console.log("User signed in", session?.user?.email);
       } else if (event === 'SIGNED_OUT') {
+        // Reset role check state when signing out
+        setRoleChecked(false);
+        setIsAdmin(false);
+        
         toast({
           title: 'Logged Out',
           description: 'You have been successfully logged out',
