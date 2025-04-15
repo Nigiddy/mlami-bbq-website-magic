@@ -26,11 +26,11 @@ const ProtectedRoute = ({
   children: React.ReactNode;
   requireAdmin?: boolean;
 }) => {
-  const { user, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin, roleChecked } = useAuth();
   const location = useLocation();
 
-  // Handle loading state first
-  if (isLoading) {
+  // Combined loading state - wait for both authentication and role check to complete
+  if (isLoading || !roleChecked) {
     console.log("Protected route is loading...");
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -45,7 +45,7 @@ const ProtectedRoute = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Admin route check
+  // Admin route check - only performed after role check has completed
   if (requireAdmin && !isAdmin) {
     console.log("User not admin, redirecting to home. isAdmin:", isAdmin);
     return <Navigate to="/" replace />;

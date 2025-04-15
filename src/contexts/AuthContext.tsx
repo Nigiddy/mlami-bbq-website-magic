@@ -12,6 +12,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   isLoading: boolean;
   isAdmin: boolean;
+  roleChecked: boolean; // New flag to track if role check has completed
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -20,7 +21,8 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => {},
   signOut: async () => {},
   isLoading: true,
-  isAdmin: false
+  isAdmin: false,
+  roleChecked: false // Initialize new flag
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -28,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [roleChecked, setRoleChecked] = useState(false); // New state to track if role check has completed
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkUserRole = async () => {
       if (!user) {
         setIsAdmin(false);
+        setRoleChecked(true); // Mark role as checked even if no user
         return;
       }
       
@@ -76,6 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error: any) {
         console.error("Error checking user role:", error);
         setIsAdmin(false);
+      } finally {
+        setRoleChecked(true); // Mark role check as complete regardless of outcome
       }
     };
     
@@ -172,7 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signOut, isLoading, isAdmin }}>
+    <AuthContext.Provider value={{ user, session, signIn, signOut, isLoading, isAdmin, roleChecked }}>
       {children}
     </AuthContext.Provider>
   );
