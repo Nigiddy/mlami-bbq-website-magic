@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import {
   Card,
@@ -12,16 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { UserCog, CheckCircle, XCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { UserCog } from 'lucide-react';
+
+// Import the refactored components
+import UserTable from './UserTable';
+import PromoteUserForm from './PromoteUserForm';
 
 interface Profile {
   id: string;
@@ -33,8 +26,6 @@ interface Profile {
 const UserRoles = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [email, setEmail] = useState<string>('');
-  const [emailError, setEmailError] = useState<string>('');
   const [promoting, setPromoting] = useState<boolean>(false);
 
   useEffect(() => {
@@ -66,20 +57,7 @@ const UserRoles = () => {
     }
   };
 
-  const promoteToAdmin = async () => {
-    if (!email) {
-      setEmailError('Email is required');
-      return;
-    }
-
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setEmailError('Please enter a valid email address');
-      return;
-    }
-
-    setEmailError('');
+  const promoteToAdmin = async (email: string) => {
     setPromoting(true);
 
     try {
@@ -126,8 +104,6 @@ const UserRoles = () => {
 
       // Refresh the user list
       fetchUsers();
-      // Clear the form
-      setEmail('');
     } catch (error: any) {
       console.error('Error promoting user:', error);
       toast({
@@ -154,77 +130,14 @@ const UserRoles = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium">Promote to Admin</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Enter a user's email to grant them admin privileges
-              </p>
-              
-              <div className="flex gap-2">
-                <div className="flex-grow">
-                  <Input
-                    placeholder="user@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={emailError ? 'border-red-500' : ''}
-                  />
-                  {emailError && (
-                    <p className="text-red-500 text-sm mt-1">{emailError}</p>
-                  )}
-                </div>
-                <Button 
-                  onClick={promoteToAdmin} 
-                  disabled={promoting}
-                >
-                  {promoting ? 'Promoting...' : 'Make Admin'}
-                </Button>
-              </div>
-            </div>
+            <PromoteUserForm 
+              onPromote={promoteToAdmin} 
+              isPromoting={promoting} 
+            />
 
             <div className="mt-8">
               <h3 className="text-lg font-medium mb-4">User Roles</h3>
-              {loading ? (
-                <div className="flex items-center justify-center p-6">
-                  <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-bbq-orange"></div>
-                </div>
-              ) : users.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No users found</p>
-              ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Admin</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.email}</TableCell>
-                          <TableCell>{user.full_name || '-'}</TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={user.role === 'admin' ? 'default' : 'outline'}
-                            >
-                              {user.role || 'user'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {user.role === 'admin' ? (
-                              <CheckCircle className="h-5 w-5 text-green-500" />
-                            ) : (
-                              <XCircle className="h-5 w-5 text-gray-300" />
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+              <UserTable users={users} loading={loading} />
             </div>
           </div>
         </CardContent>
