@@ -29,6 +29,7 @@ const ProtectedRoute = ({
   const { user, isLoading, isAdmin } = useAuth();
   const location = useLocation();
 
+  // Handle loading state first
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -37,7 +38,7 @@ const ProtectedRoute = ({
     );
   }
 
-  // Not authenticated - redirect to login for admin routes
+  // Not authenticated - redirect to login
   if (!user) {
     console.log("User not authenticated, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;

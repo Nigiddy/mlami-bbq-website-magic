@@ -58,6 +58,14 @@ const Login = () => {
     }
   });
 
+  // Debug: Log login state
+  useEffect(() => {
+    if (user) {
+      console.log("User is authenticated:", user.email);
+      console.log("Redirecting to:", location.state?.from?.pathname || "/admin");
+    }
+  }, [user, location.state?.from?.pathname]);
+
   // Handle signup
   const onSignup = async (values: z.infer<typeof signupSchema>) => {
     try {
@@ -111,20 +119,12 @@ const Login = () => {
     }
   };
 
-  // If user is already logged in, redirect to the intended destination or admin
-  // IMPORTANT: We need to place this conditional AFTER all hook calls to avoid React hooks errors
+  // The redirection logic must come AFTER all hook calls
+  // to prevent React's "rendered fewer hooks than expected" error
   if (user) {
     const redirectTo = location.state?.from?.pathname || "/admin";
     return <Navigate to={redirectTo} replace />;
   }
-
-  // Debug: Log login state
-  useEffect(() => {
-    if (user) {
-      console.log("User is authenticated:", user.email);
-      console.log("Redirecting to:", location.state?.from?.pathname || "/admin");
-    }
-  }, [user, location.state?.from?.pathname]);
 
   return (
     <Layout>
