@@ -41,6 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       try {
+        console.log("Checking role for user:", user.email);
+        
         // First check if the user exists in the profiles table
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
@@ -57,7 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .insert({
                 id: user.id,
                 email: user.email,
-                role: 'user' // Default role
+                role: 'user', // Default role
+                full_name: user.user_metadata?.full_name || ''
               });
             
             if (insertError) throw insertError;
@@ -66,7 +69,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw profileError;
           }
         } else {
-          setIsAdmin(profileData?.role === 'admin');
+          const isUserAdmin = profileData?.role === 'admin';
+          console.log("User role check:", user.email, isUserAdmin ? "admin" : profileData?.role);
+          setIsAdmin(isUserAdmin);
         }
       } catch (error: any) {
         console.error("Error checking user role:", error);
@@ -80,15 +85,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up initial session
     const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setIsLoading(false);
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      } catch (error) {
+        console.error("Error getting session:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     getSession();
 
     // Set up listener for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change:", event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -119,15 +130,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
+      
+      console.log("Login successful, user:", data.user?.email);
 
       // Redirect with state handling
       const from = location.state?.from?.pathname || "/admin";
-      navigate(from, { replace: true });
-
+      console.log("Redirecting after login to:", from);
+      
       toast({
         title: 'Login Successful',
         description: 'Welcome to the admin dashboard',
       });
+      
+      // We don't navigate here - let the Login component handle redirection
+      // This prevents race conditions with hooks
       
       return;
     } catch (error: any) {

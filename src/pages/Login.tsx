@@ -38,6 +38,7 @@ const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
   const { signIn, isLoading, user } = useAuth();
   const location = useLocation();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   // Initialize login form with zod resolver
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -58,11 +59,12 @@ const Login = () => {
     }
   });
 
-  // Debug: Log login state
+  // Check authentication status and handle redirection
   useEffect(() => {
     if (user) {
       console.log("User is authenticated:", user.email);
       console.log("Redirecting to:", location.state?.from?.pathname || "/admin");
+      setShouldRedirect(true);
     }
   }, [user, location.state?.from?.pathname]);
 
@@ -119,9 +121,9 @@ const Login = () => {
     }
   };
 
-  // The redirection logic must come AFTER all hook calls
-  // to prevent React's "rendered fewer hooks than expected" error
-  if (user) {
+  // Render redirect if user is authenticated
+  // This comes after all hook calls but before the return statement
+  if (shouldRedirect && user) {
     const redirectTo = location.state?.from?.pathname || "/admin";
     return <Navigate to={redirectTo} replace />;
   }
