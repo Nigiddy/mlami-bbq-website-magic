@@ -86,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up initial session
     const getSession = async () => {
       try {
+        setIsLoading(true);
         const { data } = await supabase.auth.getSession();
         setSession(data.session);
         setUser(data.session?.user ?? null);
@@ -133,17 +134,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log("Login successful, user:", data.user?.email);
 
-      // Redirect with state handling
-      const from = location.state?.from?.pathname || "/admin";
-      console.log("Redirecting after login to:", from);
-      
+      // Show success toast
       toast({
         title: 'Login Successful',
         description: 'Welcome to the admin dashboard',
       });
-      
-      // We don't navigate here - let the Login component handle redirection
-      // This prevents race conditions with hooks
       
       return;
     } catch (error: any) {

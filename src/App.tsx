@@ -31,6 +31,7 @@ const ProtectedRoute = ({
 
   // Handle loading state first
   if (isLoading) {
+    console.log("Protected route is loading...");
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-bbq-orange"></div>
@@ -46,11 +47,11 @@ const ProtectedRoute = ({
 
   // Admin route check
   if (requireAdmin && !isAdmin) {
-    console.log("User not admin, redirecting to home");
+    console.log("User not admin, redirecting to home. isAdmin:", isAdmin);
     return <Navigate to="/" replace />;
   }
 
-  console.log("Protected route rendering children, user:", user.email);
+  console.log("Protected route rendering children, user:", user.email, "isAdmin:", isAdmin);
   return <>{children}</>;
 };
 

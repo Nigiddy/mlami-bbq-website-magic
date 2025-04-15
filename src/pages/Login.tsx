@@ -27,18 +27,8 @@ const signupSchema = z.object({
 
 const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
-  const { signIn, isLoading, user } = useAuth();
+  const { signIn, isLoading, user, isAdmin } = useAuth();
   const location = useLocation();
-  const [shouldRedirect, setShouldRedirect] = useState(false);
-
-  // Check authentication status and handle redirection
-  useEffect(() => {
-    if (user) {
-      console.log("User is authenticated:", user.email);
-      console.log("Redirecting to:", location.state?.from?.pathname || "/admin");
-      setShouldRedirect(true);
-    }
-  }, [user, location.state?.from?.pathname]);
 
   // Handle signup
   const handleSignup = async (values: z.infer<typeof signupSchema>) => {
@@ -95,10 +85,13 @@ const Login = () => {
 
   // Toggle between login and signup forms
   const toggleForm = () => setIsSignup(!isSignup);
-
+  
+  // Determine where to redirect after login
+  const redirectTo = location.state?.from?.pathname || "/admin";
+  
   // Render redirect if user is authenticated
-  if (shouldRedirect && user) {
-    const redirectTo = location.state?.from?.pathname || "/admin";
+  if (user) {
+    console.log("User is authenticated, redirecting to:", redirectTo, "isAdmin:", isAdmin);
     return <Navigate to={redirectTo} replace />;
   }
 
