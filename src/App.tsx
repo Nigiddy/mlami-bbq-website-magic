@@ -29,7 +29,7 @@ const ProtectedRoute = ({
   const { user, isLoading, isAdmin, roleChecked } = useAuth();
   const location = useLocation();
 
-  // Combined loading state - wait for both authentication and role check to complete
+  // Wait for both authentication and role check to complete
   if (isLoading || !roleChecked) {
     console.log("Protected route is loading...");
     return (

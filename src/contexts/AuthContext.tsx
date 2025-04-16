@@ -12,7 +12,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   isLoading: boolean;
   isAdmin: boolean;
-  roleChecked: boolean; // New flag to track if role check has completed
+  roleChecked: boolean; // Flag to track if role check has completed
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   isLoading: true,
   isAdmin: false,
-  roleChecked: false // Initialize new flag
+  roleChecked: false
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,12 +30,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [roleChecked, setRoleChecked] = useState(false); // New state to track if role check has completed
+  const [roleChecked, setRoleChecked] = useState(false); // Track if role check has completed
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if user has admin role
+  // Check if user has admin role - separate effect to handle role checking
   useEffect(() => {
     const checkUserRole = async () => {
       if (!user) {
@@ -85,7 +85,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     
-    checkUserRole();
+    // Reset role check when user changes (sign in/out)
+    if (user) {
+      setRoleChecked(false); // Reset before checking
+      checkUserRole();
+    } else {
+      setIsAdmin(false);
+      setRoleChecked(true); // No user, so role check is "complete"
+    }
   }, [user]);
 
   useEffect(() => {
@@ -166,8 +173,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-
-      // Toast notification is handled in the onAuthStateChange listener
     } catch (error: any) {
       toast({
         title: 'Logout Failed',

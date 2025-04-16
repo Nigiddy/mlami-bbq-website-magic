@@ -37,7 +37,15 @@ const Login = () => {
     if (user && roleChecked) {
       console.log("Login page: User authenticated and role checked. isAdmin:", isAdmin);
       console.log("Redirecting to:", from);
-      navigate(from, { replace: true });
+      
+      // Only navigate to admin if the user is an admin
+      if (isAdmin || from !== "/admin") {
+        navigate(from, { replace: true });
+      } else {
+        // If trying to access admin but not an admin, redirect to home
+        console.log("User is not an admin, redirecting to home");
+        navigate("/", { replace: true });
+      }
     }
   }, [user, roleChecked, isAdmin, navigate, from]);
 
