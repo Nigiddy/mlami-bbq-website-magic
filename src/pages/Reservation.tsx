@@ -57,7 +57,7 @@ const Reservation = () => {
       
       <main className="flex-grow">
         <div className="bg-bbq-pale-orange py-16">
-          <div className="container mx-auto text-center">
+          <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl font-medium mb-4">
               <span className="font-dancing text-bbq-orange">Reserve</span> a Table
             </h1>
@@ -67,8 +67,8 @@ const Reservation = () => {
           </div>
         </div>
         
-        <div className="py-16 container mx-auto">
-          <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
+        <div className="py-16 container mx-auto px-4">
+          <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
@@ -122,7 +122,7 @@ const Reservation = () => {
                     onValueChange={(value) => handleSelectChange('guests', value)}
                     value={formData.guests}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select number of guests" />
                     </SelectTrigger>
                     <SelectContent>
@@ -153,7 +153,7 @@ const Reservation = () => {
                         {date ? format(date, 'PPP') : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={date}
@@ -171,7 +171,7 @@ const Reservation = () => {
                     onValueChange={(value) => handleSelectChange('time', value)}
                     value={formData.time}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select time" />
                     </SelectTrigger>
                     <SelectContent>

@@ -10,7 +10,7 @@ const Navbar = () => {
 
   return (
     <nav className="py-4 relative z-10">
-      <div className="container mx-auto flex justify-between items-center">
+      <div className="container mx-auto px-4 flex justify-between items-center">
         <Link to="/" className="font-dancing text-3xl font-bold">Mlami BBQ</Link>
         
         {/* Desktop Navigation */}
@@ -23,7 +23,7 @@ const Navbar = () => {
           </ul>
           <div className="flex items-center gap-4">
             <Cart />
-            <Button className="bg-black text-white rounded-full hover:bg-bbq-orange">
+            <Button asChild className="bg-black text-white rounded-full hover:bg-bbq-orange">
               <Link to="/reservation">Reserve Table</Link>
             </Button>
           </div>
@@ -41,13 +41,19 @@ const Navbar = () => {
       {/* Mobile Navigation */}
       {isOpen && (
         <div className="absolute top-full left-0 w-full bg-white shadow-md py-4 md:hidden">
-          <div className="container mx-auto">
+          <div className="container mx-auto px-4">
             <ul className="flex flex-col space-y-4">
               <li><Link to="/" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">Home</Link></li>
               <li><Link to="/menu" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">Menu</Link></li>
               <li><Link to="/about" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">About</Link></li>
               <li><Link to="/contact" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">Contact</Link></li>
-              <li><Button className="bg-black text-white w-full rounded-full hover:bg-bbq-orange"><Link to="/reservation" onClick={() => setIsOpen(false)}>Reserve Table</Link></Button></li>
+              <li>
+                <Link to="/reservation" onClick={() => setIsOpen(false)} className="inline-block w-full">
+                  <Button className="bg-black text-white w-full rounded-full hover:bg-bbq-orange">
+                    Reserve Table
+                  </Button>
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

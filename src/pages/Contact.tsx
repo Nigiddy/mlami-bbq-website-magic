@@ -44,7 +44,7 @@ const Contact = () => {
       
       <main className="flex-grow">
         <div className="bg-bbq-pale-orange py-16">
-          <div className="container mx-auto text-center">
+          <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl font-medium mb-4">
               <span className="font-dancing text-bbq-orange">Contact</span> Us
             </h1>
@@ -55,7 +55,7 @@ const Contact = () => {
           </div>
         </div>
         
-        <div className="py-16 container mx-auto">
+        <div className="py-16 container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12">
             {/* Contact Info */}
             <div>
@@ -98,7 +98,7 @@ const Contact = () => {
             </div>
             
             {/* Contact Form */}
-            <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
               <h2 className="text-2xl font-medium mb-6">Send Us a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>

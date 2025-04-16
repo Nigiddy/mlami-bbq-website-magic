@@ -11,10 +11,10 @@ const Hero = () => {
       {/* Orange curved background */}
       <div className={isMobile ? "hero-curve-mobile" : "hero-curve"}></div>
       
-      <div className="container mx-auto grid md:grid-cols-2 gap-12 relative z-0">
+      <div className="container mx-auto px-4 grid md:grid-cols-2 gap-12 relative z-0">
         {/* Left side text content */}
         <div className="flex flex-col justify-center space-y-6 pt-12 md:pt-0">
-          <h1 className="text-5xl md:text-6xl font-medium">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-medium">
             <span className="font-dancing text-bbq-orange">Delicious</span> meals <br />
             made ready for <br />
             you!
@@ -24,7 +24,7 @@ const Hero = () => {
           </p>
           <div>
             <Link to="/menu">
-              <Button className="bg-black hover:bg-bbq-orange text-white rounded-full px-8 py-6">
+              <Button className="bg-black hover:bg-bbq-orange text-white rounded-full px-6 py-6 sm:px-8">
                 Discover Menu
               </Button>
             </Link>
