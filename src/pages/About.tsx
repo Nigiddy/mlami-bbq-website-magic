@@ -2,6 +2,7 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const About = () => {
   return (
@@ -10,7 +11,7 @@ const About = () => {
       
       <main className="flex-grow">
         <div className="bg-bbq-pale-orange py-16">
-          <div className="container mx-auto text-center">
+          <div className="container mx-auto text-center px-4">
             <h1 className="text-4xl md:text-5xl font-medium mb-4">
               <span className="font-dancing text-bbq-orange">About</span> Us
             </h1>
@@ -21,7 +22,7 @@ const About = () => {
           </div>
         </div>
         
-        <div className="py-16 container mx-auto">
+        <div className="py-16 container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
             <div>
               <img 
@@ -80,9 +81,11 @@ const About = () => {
               We'd love to have you dine with us and experience the Mlami BBQ difference. 
               Reserve a table today or stop by for a meal you won't forget!
             </p>
-            <Button className="bg-black hover:bg-bbq-orange text-white rounded-full px-8 py-6">
-              Reserve Table
-            </Button>
+            <Link to="/reservation" className="inline-block w-full sm:w-auto">
+              <Button className="bg-black hover:bg-bbq-orange text-white rounded-full px-6 py-2 md:px-8 w-full sm:w-auto">
+                Reserve Table
+              </Button>
+            </Link>
           </div>
         </div>
       </main>

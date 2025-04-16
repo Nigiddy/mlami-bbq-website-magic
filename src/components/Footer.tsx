@@ -53,8 +53,10 @@ const Footer = () => {
               <p className="text-gray-600 text-sm">Saturday - Sunday: 10:00 AM - 9:00 PM</p>
             </div>
             <div className="mt-4">
-              <Link to="/reservation" className="bg-black text-white px-4 py-2 rounded-full text-sm inline-block hover:bg-bbq-orange transition-colors">
-                Reserve Table
+              <Link to="/reservation" className="w-full sm:w-auto inline-block">
+                <Button className="bg-black text-white px-4 py-2 rounded-full text-sm hover:bg-bbq-orange transition-colors w-full sm:w-auto">
+                  Reserve Table
+                </Button>
               </Link>
             </div>
           </div>

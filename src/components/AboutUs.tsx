@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const AboutUs = () => {
   return (
     <div className="py-16 bg-gray-100 relative">
-      <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
+      <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center px-4">
         {/* Image */}
         <div className="rounded-lg overflow-hidden">
           <img 
@@ -26,8 +26,8 @@ const AboutUs = () => {
             ut aliquip ex ea commodo consequat.
           </p>
           <div>
-            <Link to="/about">
-              <Button className="bg-black hover:bg-bbq-orange text-white rounded-full px-8">
+            <Link to="/about" className="w-full sm:w-auto inline-block">
+              <Button className="bg-black hover:bg-bbq-orange text-white rounded-full px-6 py-2 md:px-8 w-full sm:w-auto">
                 Learn more
               </Button>
             </Link>
