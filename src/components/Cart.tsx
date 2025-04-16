@@ -4,7 +4,7 @@ import { ShoppingBag, X, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
-import { useCart } from '@/contexts/cart'; // Updated import to use new structure
+import { useCart } from '@/contexts/cart'; 
 import CartItem from './CartItem';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'react-router-dom';
@@ -22,7 +22,8 @@ const Cart: React.FC = () => {
     initiatePayment, 
     checkStatus, 
     resetTransaction,
-    isProcessing
+    isProcessing,
+    lastError
   } = useMpesaTransaction();
   const [paymentSent, setPaymentSent] = useState(false);
 
@@ -32,8 +33,12 @@ const Cart: React.FC = () => {
     const tableParam = params.get('table');
     if (tableParam && !tableNumber) {
       setTableNumber(tableParam);
+      toast({
+        title: "Table Detected",
+        description: `You are ordering from Table #${tableParam}`,
+      });
     }
-  }, [location.search, tableNumber, setTableNumber]);
+  }, [location.search, tableNumber, setTableNumber, toast]);
 
   // Function to handle M-Pesa payment
   const handleMpesaPayment = async (values: PaymentFormValues) => {
@@ -148,6 +153,7 @@ const Cart: React.FC = () => {
                 onCancelPayment={handleCancelPayment}
                 isProcessing={isProcessing}
                 paymentSent={paymentSent}
+                lastError={lastError}
               />
             </DrawerFooter>
           )}

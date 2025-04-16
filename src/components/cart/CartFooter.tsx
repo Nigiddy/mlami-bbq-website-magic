@@ -13,6 +13,7 @@ interface CartFooterProps {
   onCancelPayment: () => void;
   isProcessing: boolean;
   paymentSent: boolean;
+  lastError?: string | null;
 }
 
 const CartFooter: React.FC<CartFooterProps> = ({
@@ -23,7 +24,8 @@ const CartFooter: React.FC<CartFooterProps> = ({
   onCheckStatus,
   onCancelPayment,
   isProcessing,
-  paymentSent
+  paymentSent,
+  lastError
 }) => {
   return (
     <div className="space-y-4">
@@ -54,6 +56,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
           onCheckStatus={onCheckStatus}
           onCancelPayment={onCancelPayment}
           isProcessing={isProcessing}
+          lastError={lastError}
         />
       )}
     </div>

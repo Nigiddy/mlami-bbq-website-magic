@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { initiateMpesaPayment, checkPaymentStatus, MpesaPaymentRequest, MpesaResponse } from '@/services/mpesaService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -7,11 +7,36 @@ export const useMpesaTransaction = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const initiatePayment = async (paymentRequest: MpesaPaymentRequest): Promise<boolean> => {
+  const initiatePayment = useCallback(async (paymentRequest: MpesaPaymentRequest): Promise<boolean> => {
     setIsProcessing(true);
+    setLastError(null);
+    
     try {
+      // Validate amount
+      if (paymentRequest.amount <= 0) {
+        toast({
+          title: "Invalid Amount",
+          description: "Payment amount must be greater than zero",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return false;
+      }
+
+      // Validate phone number
+      if (!paymentRequest.phoneNumber || paymentRequest.phoneNumber.length < 10) {
+        toast({
+          title: "Invalid Phone Number",
+          description: "Please enter a valid M-Pesa phone number",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return false;
+      }
+
       const response = await initiateMpesaPayment(paymentRequest);
       
       if (response.success) {
@@ -35,10 +60,13 @@ export const useMpesaTransaction = () => {
           description: response.message || "Failed to initiate M-Pesa payment",
           variant: "destructive",
         });
+        setLastError(response.message || "Unknown error");
         return false;
       }
     } catch (error) {
       console.error("M-Pesa payment error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setLastError(errorMessage);
       toast({
         title: "Payment Error",
         description: "An unexpected error occurred while processing your payment",
@@ -48,9 +76,9 @@ export const useMpesaTransaction = () => {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [toast]);
 
-  const checkStatus = async (): Promise<boolean> => {
+  const checkStatus = useCallback(async (): Promise<boolean> => {
     if (!checkoutRequestId) {
       toast({
         title: "Error",
@@ -61,6 +89,8 @@ export const useMpesaTransaction = () => {
     }
     
     setIsProcessing(true);
+    setLastError(null);
+    
     try {
       const response = await checkPaymentStatus(checkoutRequestId);
       
@@ -76,10 +106,13 @@ export const useMpesaTransaction = () => {
           description: response.message || "Payment has not been completed yet",
           variant: "destructive",
         });
+        setLastError(response.message || "Payment not completed");
         return false;
       }
     } catch (error) {
       console.error("Payment status check error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setLastError(errorMessage);
       toast({
         title: "Status Check Failed",
         description: "Failed to check payment status",
@@ -89,12 +122,13 @@ export const useMpesaTransaction = () => {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [checkoutRequestId, toast]);
 
-  const resetTransaction = () => {
+  const resetTransaction = useCallback(() => {
     setCheckoutRequestId(null);
     setTransactionId(null);
-  };
+    setLastError(null);
+  }, []);
 
   return {
     initiatePayment,
@@ -102,6 +136,7 @@ export const useMpesaTransaction = () => {
     resetTransaction,
     isProcessing,
     checkoutRequestId,
-    transactionId
+    transactionId,
+    lastError
   };
 };
