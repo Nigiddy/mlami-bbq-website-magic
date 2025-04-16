@@ -1,6 +1,6 @@
-
 import { Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const Footer = () => {
   return (
