@@ -27,6 +27,7 @@ const UserRoles = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [promoting, setPromoting] = useState<boolean>(false);
+  const [selectedRole, setSelectedRole] = useState<string>('admin');
 
   useEffect(() => {
     fetchUsers();
@@ -57,7 +58,7 @@ const UserRoles = () => {
     }
   };
 
-  const promoteToAdmin = async (email: string) => {
+  const promoteUser = async (email: string, role: string) => {
     setPromoting(true);
 
     try {
@@ -81,25 +82,26 @@ const UserRoles = () => {
         return;
       }
 
-      if (existingUser?.role === 'admin') {
+      if (existingUser?.role === role) {
         toast({
-          title: 'Already an admin',
-          description: 'This user already has admin privileges',
+          title: `Already a ${role}`,
+          description: `This user already has ${role} privileges`,
           variant: 'default',
         });
         return;
       }
 
-      // Call the set_user_as_admin function
-      const { error: promotionError } = await supabase.rpc('set_user_as_admin', {
-        user_email: email,
-      });
+      // Update the user's role directly
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ role: role })
+        .eq('email', email);
 
-      if (promotionError) throw promotionError;
+      if (updateError) throw updateError;
 
       toast({
         title: 'Success!',
-        description: `${email} has been promoted to admin`,
+        description: `${email} has been promoted to ${role}`,
       });
 
       // Refresh the user list
@@ -125,14 +127,16 @@ const UserRoles = () => {
             User Role Management
           </CardTitle>
           <CardDescription>
-            Promote users to admin or view existing roles
+            Promote users to admin or cook roles, or view existing roles
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <PromoteUserForm 
-              onPromote={promoteToAdmin} 
+              onPromote={(email) => promoteUser(email, selectedRole)}
               isPromoting={promoting} 
+              selectedRole={selectedRole}
+              onRoleChange={setSelectedRole}
             />
 
             <div className="mt-8">
@@ -142,7 +146,7 @@ const UserRoles = () => {
           </div>
         </CardContent>
         <CardFooter className="bg-muted/50 p-3 flex justify-between text-sm text-gray-500">
-          <p>Admin users have full access to the dashboard and can manage all resources</p>
+          <p>Admin users have full access to the dashboard. Cook users can manage orders and inventory.</p>
         </CardFooter>
       </Card>
     </div>

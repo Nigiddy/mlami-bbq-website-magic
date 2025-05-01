@@ -1,60 +1,106 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Schema for form validation
+const formSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+});
 
 interface PromoteUserFormProps {
-  onPromote: (email: string) => Promise<void>;
+  onPromote: (email: string) => void;
   isPromoting: boolean;
+  selectedRole: string;
+  onRoleChange: (role: string) => void;
 }
 
-const PromoteUserForm = ({ onPromote, isPromoting }: PromoteUserFormProps) => {
-  const [email, setEmail] = useState<string>('');
-  const [emailError, setEmailError] = useState<string>('');
+const PromoteUserForm = ({ 
+  onPromote, 
+  isPromoting, 
+  selectedRole, 
+  onRoleChange 
+}: PromoteUserFormProps) => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+    },
+  });
 
-  const handleSubmit = () => {
-    if (!email) {
-      setEmailError('Email is required');
-      return;
-    }
-
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setEmailError('Please enter a valid email address');
-      return;
-    }
-
-    setEmailError('');
-    onPromote(email);
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    onPromote(values.email);
+    form.reset();
   };
 
   return (
-    <div>
-      <h3 className="text-lg font-medium">Promote to Admin</h3>
-      <p className="text-sm text-gray-500 mb-4">
-        Enter a user's email to grant them admin privileges
-      </p>
+    <div className="border rounded-md p-4 bg-white/40 backdrop-blur-sm">
+      <h3 className="text-lg font-medium mb-4">Promote User</h3>
       
-      <div className="flex gap-2">
-        <div className="flex-grow">
-          <Input
-            placeholder="user@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={emailError ? 'border-red-500' : ''}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>User Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter user's email address" 
+                    {...field} 
+                    disabled={isPromoting}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {emailError && (
-            <p className="text-red-500 text-sm mt-1">{emailError}</p>
-          )}
-        </div>
-        <Button 
-          onClick={handleSubmit} 
-          disabled={isPromoting}
-        >
-          {isPromoting ? 'Promoting...' : 'Make Admin'}
-        </Button>
-      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FormLabel htmlFor="role-select">Role</FormLabel>
+              <Select 
+                value={selectedRole} 
+                onValueChange={onRoleChange}
+                disabled={isPromoting}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="cook">Head Cook</SelectItem>
+                  <SelectItem value="user">Regular User</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isPromoting}
+              >
+                {isPromoting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Promoting...
+                  </>
+                ) : (
+                  `Promote to ${selectedRole}`
+                )}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 };

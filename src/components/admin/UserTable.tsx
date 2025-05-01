@@ -36,6 +36,14 @@ const UserTable = ({ users, loading }: UserTableProps) => {
     return <p className="text-gray-500 text-center py-4">No users found</p>;
   }
 
+  const getRoleBadgeVariant = (role: string | null) => {
+    switch (role) {
+      case 'admin': return 'default';
+      case 'cook': return 'secondary';
+      default: return 'outline';
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -45,6 +53,7 @@ const UserTable = ({ users, loading }: UserTableProps) => {
             <TableHead>Name</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Admin</TableHead>
+            <TableHead>Cook</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -54,13 +63,20 @@ const UserTable = ({ users, loading }: UserTableProps) => {
               <TableCell>{user.full_name || '-'}</TableCell>
               <TableCell>
                 <Badge 
-                  variant={user.role === 'admin' ? 'default' : 'outline'}
+                  variant={getRoleBadgeVariant(user.role)}
                 >
                   {user.role || 'user'}
                 </Badge>
               </TableCell>
               <TableCell>
                 {user.role === 'admin' ? (
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-gray-300" />
+                )}
+              </TableCell>
+              <TableCell>
+                {user.role === 'cook' ? (
                   <CheckCircle className="h-5 w-5 text-green-500" />
                 ) : (
                   <XCircle className="h-5 w-5 text-gray-300" />

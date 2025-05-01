@@ -1,9 +1,10 @@
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ShoppingBag, Package, QrCode, Users } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Package, QrCode, Users, ChefHat } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
-type AdminViewType = 'dashboard' | 'orders' | 'inventory' | 'qrcodes' | 'users';
+type AdminViewType = 'dashboard' | 'orders' | 'inventory' | 'qrcodes' | 'users' | 'cook';
 
 interface AdminSidebarProps {
   activeView: AdminViewType;
@@ -11,37 +12,57 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar = ({ activeView, setActiveView }: AdminSidebarProps) => {
+  const { isAdmin } = useAuth();
+  
+  // Define navigation items with role-based visibility
   const navItems = [
     {
       title: 'Dashboard',
       icon: <LayoutDashboard className="h-5 w-5" />,
-      value: 'dashboard' as AdminViewType
+      value: 'dashboard' as AdminViewType,
+      visibleTo: ['admin', 'cook'] // Both admin and cook can see dashboard
     },
     {
       title: 'Orders',
       icon: <ShoppingBag className="h-5 w-5" />,
-      value: 'orders' as AdminViewType
+      value: 'orders' as AdminViewType,
+      visibleTo: ['admin', 'cook'] // Both can see orders
     },
     {
       title: 'Inventory',
       icon: <Package className="h-5 w-5" />,
-      value: 'inventory' as AdminViewType
+      value: 'inventory' as AdminViewType,
+      visibleTo: ['admin', 'cook'] // Both can manage inventory
     },
     {
       title: 'QR Codes',
       icon: <QrCode className="h-5 w-5" />,
-      value: 'qrcodes' as AdminViewType
+      value: 'qrcodes' as AdminViewType,
+      visibleTo: ['admin'] // Admin only
     },
     {
       title: 'User Management',
       icon: <Users className="h-5 w-5" />,
-      value: 'users' as AdminViewType
+      value: 'users' as AdminViewType,
+      visibleTo: ['admin'] // Admin only
+    },
+    {
+      title: 'Cook Dashboard',
+      icon: <ChefHat className="h-5 w-5" />,
+      value: 'cook' as AdminViewType,
+      visibleTo: ['cook'] // Cook only
     }
   ];
 
+  // Filter items based on user role
+  const filteredNavItems = navItems.filter(item => {
+    if (isAdmin) return item.visibleTo.includes('admin');
+    return item.visibleTo.includes('cook');
+  });
+
   return (
     <div className="w-full md:w-64 space-y-2">
-      {navItems.map((item) => (
+      {filteredNavItems.map((item) => (
         <Button
           key={item.value}
           variant={activeView === item.value ? "default" : "ghost"}

@@ -21,12 +21,14 @@ const queryClient = new QueryClient();
 // Protected Route Component with role-based access control
 const ProtectedRoute = ({ 
   children, 
-  requireAdmin = false 
+  requireAdmin = false,
+  requireCook = false
 }: { 
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requireCook?: boolean;
 }) => {
-  const { user, isLoading, isAdmin, roleChecked } = useAuth();
+  const { user, isLoading, isAdmin, isCook, roleChecked } = useAuth();
   const location = useLocation();
 
   // Wait for both authentication and role check to complete
@@ -45,13 +47,13 @@ const ProtectedRoute = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Admin route check - only performed after role check has completed
-  if (requireAdmin && !isAdmin) {
-    console.log("User not admin, redirecting to home. isAdmin:", isAdmin);
+  // Role check
+  if ((requireAdmin && !isAdmin) && (requireCook && !isCook)) {
+    console.log("User lacks required role, redirecting to home. isAdmin:", isAdmin, "isCook:", isCook);
     return <Navigate to="/" replace />;
   }
 
-  console.log("Protected route rendering children, user:", user.email, "isAdmin:", isAdmin);
+  console.log("Protected route rendering children, user:", user.email, "isAdmin:", isAdmin, "isCook:", isCook);
   return <>{children}</>;
 };
 
@@ -66,7 +68,7 @@ const AppRoutes = () => (
     <Route 
       path="/admin" 
       element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute requireAdmin={false} requireCook={true}>
           <Admin />
         </ProtectedRoute>
       } 

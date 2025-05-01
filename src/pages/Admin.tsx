@@ -9,6 +9,7 @@ import InventoryManagement from '@/components/admin/InventoryManagement';
 import QRCodeGenerator from '@/components/admin/QRCodeGenerator';
 import OrderDetails from '@/components/admin/OrderDetails';
 import UserRoles from '@/components/admin/UserRoles';
+import CookDashboard from '@/components/admin/CookDashboard';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogOut, UserCircle } from 'lucide-react';
@@ -22,14 +23,26 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const Admin = () => {
-  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'qrcodes' | 'users'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'qrcodes' | 'users' | 'cook'>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { orders, isLoading } = useOrders();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   
   const selectedOrder = selectedOrderId 
     ? orders.find(order => order.id === selectedOrderId) 
     : null;
+
+  // Determine if the current user is a cook
+  const isCook = user?.user_metadata?.role === 'cook' || false;
+
+  // If a user somehow navigates to an unauthorized view, reset to dashboard
+  if ((activeView === 'qrcodes' || activeView === 'users') && !isAdmin) {
+    setActiveView('dashboard');
+  }
+
+  if (activeView === 'cook' && !isCook && !isAdmin) {
+    setActiveView('dashboard');
+  }
 
   return (
     <Layout>
@@ -45,6 +58,7 @@ const Admin = () => {
                 {activeView === 'inventory' && 'Inventory Management'}
                 {activeView === 'qrcodes' && 'QR Code Generator'}
                 {activeView === 'users' && 'User Management'}
+                {activeView === 'cook' && 'Cook Dashboard'}
               </h1>
               
               <DropdownMenu>
@@ -52,10 +66,14 @@ const Admin = () => {
                   <Button variant="outline" className="flex items-center gap-2">
                     <UserCircle className="h-5 w-5" />
                     {user?.email?.split('@')[0]}
+                    {isAdmin && <span className="text-xs bg-green-100 text-green-800 px-1 rounded">Admin</span>}
+                    {isCook && <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">Cook</span>}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>
+                    {isAdmin ? 'Admin Account' : 'Cook Account'}
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive cursor-pointer"
@@ -94,8 +112,9 @@ const Admin = () => {
             )}
             
             {activeView === 'inventory' && <InventoryManagement />}
-            {activeView === 'qrcodes' && <QRCodeGenerator />}
-            {activeView === 'users' && <UserRoles />}
+            {activeView === 'qrcodes' && isAdmin && <QRCodeGenerator />}
+            {activeView === 'users' && isAdmin && <UserRoles />}
+            {activeView === 'cook' && <CookDashboard />}
           </div>
         </div>
       </div>

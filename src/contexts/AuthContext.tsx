@@ -12,6 +12,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   isLoading: boolean;
   isAdmin: boolean;
+  isCook: boolean;
   roleChecked: boolean; // Flag to track if role check has completed
 };
 
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   isLoading: true,
   isAdmin: false,
+  isCook: false,
   roleChecked: false
 });
 
@@ -30,16 +32,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCook, setIsCook] = useState(false);
   const [roleChecked, setRoleChecked] = useState(false); // Track if role check has completed
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if user has admin role - separate effect to handle role checking
+  // Check if user has specific role - separate effect to handle role checking
   useEffect(() => {
     const checkUserRole = async () => {
       if (!user) {
         setIsAdmin(false);
+        setIsCook(false);
         setRoleChecked(true); // Mark role as checked even if no user
         return;
       }
@@ -69,17 +73,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             if (insertError) throw insertError;
             setIsAdmin(false);
+            setIsCook(false);
           } else {
             throw profileError;
           }
         } else {
-          const isUserAdmin = profileData?.role === 'admin';
-          console.log("User role check:", user.email, isUserAdmin ? "admin" : profileData?.role);
-          setIsAdmin(isUserAdmin);
+          const userRole = profileData?.role || 'user';
+          console.log("User role check:", user.email, userRole);
+          
+          setIsAdmin(userRole === 'admin');
+          setIsCook(userRole === 'cook');
+          
+          // Set role in user metadata for easy access
+          if (user && !user.user_metadata.role) {
+            await supabase.auth.updateUser({
+              data: { role: userRole }
+            });
+          }
         }
       } catch (error: any) {
         console.error("Error checking user role:", error);
         setIsAdmin(false);
+        setIsCook(false);
       } finally {
         setRoleChecked(true); // Mark role check as complete regardless of outcome
       }
@@ -91,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       checkUserRole();
     } else {
       setIsAdmin(false);
+      setIsCook(false);
       setRoleChecked(true); // No user, so role check is "complete"
     }
   }, [user]);
@@ -152,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Show success toast
       toast({
         title: 'Login Successful',
-        description: 'Welcome to the admin dashboard',
+        description: 'Welcome to the dashboard',
       });
       
       return;
@@ -185,7 +201,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signOut, isLoading, isAdmin, roleChecked }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      signIn, 
+      signOut, 
+      isLoading, 
+      isAdmin, 
+      isCook, 
+      roleChecked 
+    }}>
       {children}
     </AuthContext.Provider>
   );
