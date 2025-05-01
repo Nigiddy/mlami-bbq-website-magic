@@ -1,12 +1,14 @@
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChefHat } from 'lucide-react';
 import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
 import Cart from './Cart';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isAdmin, isCook } = useAuth();
 
   return (
     <nav className="py-4 relative z-10">
@@ -20,6 +22,14 @@ const Navbar = () => {
             <li><Link to="/menu" className="hover:text-bbq-orange transition-colors">Menu</Link></li>
             <li><Link to="/about" className="hover:text-bbq-orange transition-colors">About</Link></li>
             <li><Link to="/contact" className="hover:text-bbq-orange transition-colors">Contact</Link></li>
+            {(isAdmin || isCook) && (
+              <li>
+                <Link to="/admin" className="flex items-center hover:text-bbq-orange transition-colors">
+                  <ChefHat className="mr-2 h-4 w-4" />
+                  {isCook ? 'Cook Dashboard' : 'Admin Dashboard'}
+                </Link>
+              </li>
+            )}
           </ul>
           <div className="flex items-center gap-4">
             <Cart />
@@ -47,6 +57,14 @@ const Navbar = () => {
               <li><Link to="/menu" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">Menu</Link></li>
               <li><Link to="/about" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">About</Link></li>
               <li><Link to="/contact" onClick={() => setIsOpen(false)} className="block hover:text-bbq-orange transition-colors">Contact</Link></li>
+              {(isAdmin || isCook) && (
+                <li>
+                  <Link to="/admin" onClick={() => setIsOpen(false)} className="flex items-center hover:text-bbq-orange transition-colors">
+                    <ChefHat className="mr-2 h-4 w-4" />
+                    {isCook ? 'Cook Dashboard' : 'Admin Dashboard'}
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link to="/reservation" onClick={() => setIsOpen(false)} className="inline-block w-full">
                   <Button className="bg-black text-white w-full rounded-full hover:bg-bbq-orange">

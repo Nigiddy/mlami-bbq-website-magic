@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -26,23 +26,25 @@ const Admin = () => {
   const [activeView, setActiveView] = useState<'dashboard' | 'orders' | 'inventory' | 'qrcodes' | 'users' | 'cook'>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { orders, isLoading } = useOrders();
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, isCook } = useAuth();
+  
+  // Auto select cook dashboard for cook users on first load
+  useEffect(() => {
+    if (isCook && !isAdmin) {
+      setActiveView('cook');
+    }
+  }, [isCook, isAdmin]);
   
   const selectedOrder = selectedOrderId 
     ? orders.find(order => order.id === selectedOrderId) 
     : null;
 
-  // Determine if the current user is a cook
-  const isCook = user?.user_metadata?.role === 'cook' || false;
-
   // If a user somehow navigates to an unauthorized view, reset to dashboard
-  if ((activeView === 'qrcodes' || activeView === 'users') && !isAdmin) {
-    setActiveView('dashboard');
-  }
-
-  if (activeView === 'cook' && !isCook && !isAdmin) {
-    setActiveView('dashboard');
-  }
+  useEffect(() => {
+    if ((activeView === 'qrcodes' || activeView === 'users') && !isAdmin) {
+      setActiveView(isCook ? 'cook' : 'dashboard');
+    }
+  }, [activeView, isAdmin, isCook]);
 
   return (
     <Layout>

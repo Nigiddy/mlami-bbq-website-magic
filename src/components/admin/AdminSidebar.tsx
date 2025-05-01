@@ -12,7 +12,7 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar = ({ activeView, setActiveView }: AdminSidebarProps) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isCook } = useAuth();
   
   // Define navigation items with role-based visibility
   const navItems = [
@@ -50,14 +50,15 @@ const AdminSidebar = ({ activeView, setActiveView }: AdminSidebarProps) => {
       title: 'Cook Dashboard',
       icon: <ChefHat className="h-5 w-5" />,
       value: 'cook' as AdminViewType,
-      visibleTo: ['cook'] // Cook only
+      visibleTo: ['cook', 'admin'] // Cook and admin can see cook dashboard
     }
   ];
 
   // Filter items based on user role
   const filteredNavItems = navItems.filter(item => {
     if (isAdmin) return item.visibleTo.includes('admin');
-    return item.visibleTo.includes('cook');
+    if (isCook) return item.visibleTo.includes('cook');
+    return false;
   });
 
   return (

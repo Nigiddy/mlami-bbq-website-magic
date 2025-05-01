@@ -48,7 +48,7 @@ const ProtectedRoute = ({
   }
 
   // Role check
-  if ((requireAdmin && !isAdmin) && (requireCook && !isCook)) {
+  if (requireAdmin && !isAdmin && requireCook && !isCook) {
     console.log("User lacks required role, redirecting to home. isAdmin:", isAdmin, "isCook:", isCook);
     return <Navigate to="/" replace />;
   }
@@ -68,7 +68,7 @@ const AppRoutes = () => (
     <Route 
       path="/admin" 
       element={
-        <ProtectedRoute requireAdmin={false} requireCook={true}>
+        <ProtectedRoute requireAdmin={true} requireCook={true}>
           <Admin />
         </ProtectedRoute>
       } 
