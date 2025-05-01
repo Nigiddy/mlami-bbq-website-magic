@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Mail, MapPin, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import GoogleMap from '@/components/GoogleMap';
 
 const Contact = () => {
   const { toast } = useToast();
@@ -38,6 +39,8 @@ const Contact = () => {
     });
   };
 
+  const restaurantAddress = "123 BBQ Street, Flavor City, FC 12345";
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -65,7 +68,7 @@ const Contact = () => {
                   <MapPin className="mr-4 h-6 w-6 text-bbq-orange flex-shrink-0" />
                   <div>
                     <h3 className="font-medium mb-1">Our Location</h3>
-                    <p className="text-gray-600">123 BBQ Street, Flavor City, FC 12345</p>
+                    <p className="text-gray-600">{restaurantAddress}</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -161,11 +164,9 @@ const Contact = () => {
             </div>
           </div>
           
-          {/* Google Map (Placeholder) */}
-          <div className="mt-16 bg-gray-200 rounded-lg h-[400px] flex items-center justify-center">
-            <p className="text-gray-600">
-              Map is displayed here. Integrate with Google Maps API for actual functionality.
-            </p>
+          {/* Google Map */}
+          <div className="mt-16">
+            <GoogleMap address={restaurantAddress} />
           </div>
         </div>
       </main>
