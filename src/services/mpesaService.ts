@@ -31,6 +31,13 @@ export const formatPhoneNumber = (phoneNumber: string): string => {
   return formattedPhone;
 };
 
+// Helper function to handle timeouts
+const timeoutPromise = (ms: number) => {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms);
+  });
+};
+
 export const initiateMpesaPayment = async (
   paymentRequest: MpesaPaymentRequest
 ): Promise<MpesaResponse> => {
@@ -43,7 +50,8 @@ export const initiateMpesaPayment = async (
     console.log(`Initiating payment for ${formattedPhone} of amount ${paymentRequest.amount}`);
 
     // Call the Supabase Edge Function that will handle Daraja API interaction
-    const { data, error } = await supabase.functions.invoke('mpesa-stk-push', {
+    // With timeout handling
+    const fetchPromise = supabase.functions.invoke('mpesa-stk-push', {
       body: {
         phoneNumber: formattedPhone,
         amount: Math.round(paymentRequest.amount), // Ensure amount is a whole number
@@ -52,8 +60,22 @@ export const initiateMpesaPayment = async (
       },
     });
 
+    // Race between fetch and timeout (10 seconds)
+    const { data, error } = await Promise.race([
+      fetchPromise,
+      timeoutPromise(15000).then(() => {
+        throw new Error('Connection timeout. Please check your internet connection and try again.');
+      })
+    ]) as any;
+
     if (error) {
       console.error('M-Pesa STK Push error:', error);
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError') || error.message?.includes('network')) {
+        return {
+          success: false,
+          message: 'Network error. Please check your internet connection and try again.',
+        };
+      }
       return {
         success: false,
         message: `Failed to initiate payment: ${error.message || 'Unknown error'}`,
@@ -76,11 +98,21 @@ export const initiateMpesaPayment = async (
       transactionId: data.transactionId,
       checkoutRequestId: data.checkoutRequestId,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('M-Pesa service error:', error);
+    
+    // Better error handling for different types of errors
+    let errorMessage = 'An unexpected error occurred. Please try again later.';
+    
+    if (error.message?.includes('timeout') || error.message?.includes('time out')) {
+      errorMessage = 'Connection timeout. The server is taking too long to respond. Please try again.';
+    } else if (error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('connection')) {
+      errorMessage = 'Network error. Please check your internet connection and try again.';
+    }
+    
     return {
       success: false,
-      message: 'An unexpected error occurred. Please try again later.',
+      message: errorMessage,
     };
   }
 };
@@ -91,14 +123,29 @@ export const checkPaymentStatus = async (checkoutRequestId: string): Promise<Mpe
     
     console.log(`Checking payment status for checkoutRequestId: ${checkoutRequestId}`);
     
-    const { data, error } = await supabase.functions.invoke('mpesa-query-status', {
+    // With timeout handling
+    const fetchPromise = supabase.functions.invoke('mpesa-query-status', {
       body: {
         checkoutRequestId,
       },
     });
 
+    // Race between fetch and timeout (10 seconds)
+    const { data, error } = await Promise.race([
+      fetchPromise,
+      timeoutPromise(15000).then(() => {
+        throw new Error('Connection timeout. Please check your internet connection and try again.');
+      })
+    ]) as any;
+
     if (error) {
       console.error('M-Pesa status check error:', error);
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError') || error.message?.includes('network')) {
+        return {
+          success: false,
+          message: 'Network error. Please check your internet connection and try again.',
+        };
+      }
       return {
         success: false,
         message: `Failed to check payment status: ${error.message || 'Unknown error'}`,
@@ -120,11 +167,21 @@ export const checkPaymentStatus = async (checkoutRequestId: string): Promise<Mpe
       message: data.message,
       transactionId: data.transactionId,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Payment status check error:', error);
+    
+    // Better error handling for different types of errors
+    let errorMessage = 'Failed to check payment status due to a connection issue. Please try again.';
+    
+    if (error.message?.includes('timeout') || error.message?.includes('time out')) {
+      errorMessage = 'Connection timeout while checking status. Please try again in a few moments.';
+    } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+      errorMessage = 'Network error while checking status. Please check your internet connection.';
+    }
+    
     return {
       success: false,
-      message: 'Failed to check payment status due to a connection issue. Please try again.',
+      message: errorMessage,
     };
   }
 };

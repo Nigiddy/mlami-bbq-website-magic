@@ -23,7 +23,8 @@ const Cart: React.FC = () => {
     checkStatus, 
     resetTransaction,
     isProcessing,
-    lastError
+    lastError,
+    paymentStatus
   } = useMpesaTransaction();
   const [paymentSent, setPaymentSent] = useState(false);
 
@@ -39,9 +40,35 @@ const Cart: React.FC = () => {
       });
     }
   }, [location.search, tableNumber, setTableNumber, toast]);
+  
+  // Reset payment state when cart is closed
+  useEffect(() => {
+    if (!open && paymentSent) {
+      // Small delay to allow drawer to close before resetting
+      const timer = setTimeout(() => {
+        if (paymentStatus === 'success') {
+          clearCart();
+        }
+        setPaymentSent(false);
+        resetTransaction();
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [open, paymentSent, paymentStatus, clearCart, resetTransaction]);
 
   // Function to handle M-Pesa payment
   const handleMpesaPayment = async (values: PaymentFormValues) => {
+    // Validate table number
+    if (!values.tableNumber || values.tableNumber.trim() === '') {
+      toast({
+        title: "Missing Table Number",
+        description: "Please enter your table number",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Format cart items for the database
     const cartItems = items.map(item => ({
       id: item.id,
@@ -69,16 +96,13 @@ const Cart: React.FC = () => {
   const handleCheckStatus = async () => {
     const success = await checkStatus();
     if (success) {
-      // Payment was successful, clear the cart
-      clearCart();
-      setOpen(false);
-      setPaymentSent(false);
-      resetTransaction();
-      
+      // Payment was successful
       toast({
         title: "Order Placed Successfully",
         description: "Your order has been placed and will be prepared shortly.",
       });
+      
+      // We'll let the useEffect close the drawer and clean up
     }
   };
 
@@ -154,6 +178,7 @@ const Cart: React.FC = () => {
                 isProcessing={isProcessing}
                 paymentSent={paymentSent}
                 lastError={lastError}
+                paymentStatus={paymentStatus}
               />
             </DrawerFooter>
           )}

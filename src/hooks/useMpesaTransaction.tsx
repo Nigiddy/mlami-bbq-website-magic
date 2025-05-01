@@ -8,11 +8,13 @@ export const useMpesaTransaction = () => {
   const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
   const { toast } = useToast();
 
   const initiatePayment = useCallback(async (paymentRequest: MpesaPaymentRequest): Promise<boolean> => {
     setIsProcessing(true);
     setLastError(null);
+    setPaymentStatus('pending');
     
     try {
       // Validate amount
@@ -23,6 +25,7 @@ export const useMpesaTransaction = () => {
           variant: "destructive",
         });
         setIsProcessing(false);
+        setPaymentStatus('idle');
         return false;
       }
 
@@ -34,6 +37,7 @@ export const useMpesaTransaction = () => {
           variant: "destructive",
         });
         setIsProcessing(false);
+        setPaymentStatus('idle');
         return false;
       }
 
@@ -55,6 +59,7 @@ export const useMpesaTransaction = () => {
         
         return true;
       } else {
+        setPaymentStatus('failed');
         toast({
           title: "Payment Failed",
           description: response.message || "Failed to initiate M-Pesa payment",
@@ -65,6 +70,7 @@ export const useMpesaTransaction = () => {
       }
     } catch (error) {
       console.error("M-Pesa payment error:", error);
+      setPaymentStatus('failed');
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setLastError(errorMessage);
       toast({
@@ -95,6 +101,7 @@ export const useMpesaTransaction = () => {
       const response = await checkPaymentStatus(checkoutRequestId);
       
       if (response.success) {
+        setPaymentStatus('success');
         toast({
           title: "Payment Successful",
           description: "Your M-Pesa payment was completed successfully",
@@ -128,6 +135,7 @@ export const useMpesaTransaction = () => {
     setCheckoutRequestId(null);
     setTransactionId(null);
     setLastError(null);
+    setPaymentStatus('idle');
   }, []);
 
   return {
@@ -137,6 +145,7 @@ export const useMpesaTransaction = () => {
     isProcessing,
     checkoutRequestId,
     transactionId,
-    lastError
+    lastError,
+    paymentStatus
   };
 };

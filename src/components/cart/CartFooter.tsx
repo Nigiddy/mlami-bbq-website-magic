@@ -14,6 +14,7 @@ interface CartFooterProps {
   isProcessing: boolean;
   paymentSent: boolean;
   lastError?: string | null;
+  paymentStatus?: 'idle' | 'pending' | 'success' | 'failed';
 }
 
 const CartFooter: React.FC<CartFooterProps> = ({
@@ -25,7 +26,8 @@ const CartFooter: React.FC<CartFooterProps> = ({
   onCancelPayment,
   isProcessing,
   paymentSent,
-  lastError
+  lastError,
+  paymentStatus = 'idle'
 }) => {
   return (
     <div className="space-y-4">
@@ -57,6 +59,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
           onCancelPayment={onCancelPayment}
           isProcessing={isProcessing}
           lastError={lastError}
+          paymentStatus={paymentStatus}
         />
       )}
     </div>
