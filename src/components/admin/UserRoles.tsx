@@ -10,11 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { UserCog } from 'lucide-react';
+import { UserCog, UserPlus } from 'lucide-react';
 
 // Import the refactored components
 import UserTable from './UserTable';
 import PromoteUserForm from './PromoteUserForm';
+import CreateUserForm from './CreateUserForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Profile {
   id: string;
@@ -28,6 +30,7 @@ const UserRoles = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [promoting, setPromoting] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string>('admin');
+  const [activeTab, setActiveTab] = useState<string>('manage');
 
   useEffect(() => {
     fetchUsers();
@@ -118,6 +121,32 @@ const UserRoles = () => {
     }
   };
 
+  const updateUserRole = async (userId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Role Updated',
+        description: 'User role has been updated successfully',
+      });
+      
+      // Refresh the user list
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error updating user role:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update user role',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -127,23 +156,41 @@ const UserRoles = () => {
             User Role Management
           </CardTitle>
           <CardDescription>
-            Promote users to admin or cook roles, or view existing roles
+            Add new users or manage existing roles in the system
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <PromoteUserForm 
-              onPromote={(email) => promoteUser(email, selectedRole)}
-              isPromoting={promoting} 
-              selectedRole={selectedRole}
-              onRoleChange={setSelectedRole}
-            />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="manage">Manage Existing Users</TabsTrigger>
+              <TabsTrigger value="create" className="flex items-center">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add New User
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="manage" className="space-y-6">
+              <PromoteUserForm 
+                onPromote={(email) => promoteUser(email, selectedRole)}
+                isPromoting={promoting} 
+                selectedRole={selectedRole}
+                onRoleChange={setSelectedRole}
+              />
 
-            <div className="mt-8">
-              <h3 className="text-lg font-medium mb-4">User Roles</h3>
-              <UserTable users={users} loading={loading} />
-            </div>
-          </div>
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-4">User Roles</h3>
+                <UserTable 
+                  users={users} 
+                  loading={loading} 
+                  onUpdateRole={updateUserRole} 
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="create">
+              <CreateUserForm onUserCreated={fetchUsers} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
         <CardFooter className="bg-muted/50 p-3 flex justify-between text-sm text-gray-500">
           <p>Admin users have full access to the dashboard. Cook users can manage orders and inventory.</p>

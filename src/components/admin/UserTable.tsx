@@ -1,5 +1,5 @@
 
-import React from 'react';
+import { useState } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -9,7 +9,9 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Edit2, Save, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface Profile {
   id: string;
@@ -21,9 +23,13 @@ interface Profile {
 interface UserTableProps {
   users: Profile[];
   loading: boolean;
+  onUpdateRole: (userId: string, newRole: string) => Promise<void>;
 }
 
-const UserTable = ({ users, loading }: UserTableProps) => {
+const UserTable = ({ users, loading, onUpdateRole }: UserTableProps) => {
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>('');
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-6">
@@ -44,6 +50,21 @@ const UserTable = ({ users, loading }: UserTableProps) => {
     }
   };
 
+  const handleEditClick = (user: Profile) => {
+    setEditingUserId(user.id);
+    setSelectedRole(user.role || 'user');
+  };
+
+  const handleSaveClick = async (userId: string) => {
+    await onUpdateRole(userId, selectedRole);
+    setEditingUserId(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUserId(null);
+    setSelectedRole('');
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -54,6 +75,7 @@ const UserTable = ({ users, loading }: UserTableProps) => {
             <TableHead>Role</TableHead>
             <TableHead>Admin</TableHead>
             <TableHead>Cook</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,11 +84,24 @@ const UserTable = ({ users, loading }: UserTableProps) => {
               <TableCell className="font-medium">{user.email}</TableCell>
               <TableCell>{user.full_name || '-'}</TableCell>
               <TableCell>
-                <Badge 
-                  variant={getRoleBadgeVariant(user.role)}
-                >
-                  {user.role || 'user'}
-                </Badge>
+                {editingUserId === user.id ? (
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="cook">Cook</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Badge 
+                    variant={getRoleBadgeVariant(user.role)}
+                  >
+                    {user.role || 'user'}
+                  </Badge>
+                )}
               </TableCell>
               <TableCell>
                 {user.role === 'admin' ? (
@@ -80,6 +115,37 @@ const UserTable = ({ users, loading }: UserTableProps) => {
                   <CheckCircle className="h-5 w-5 text-green-500" />
                 ) : (
                   <XCircle className="h-5 w-5 text-gray-300" />
+                )}
+              </TableCell>
+              <TableCell>
+                {editingUserId === user.id ? (
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleSaveClick(user.id)}
+                      className="h-8 w-8 text-green-600 hover:text-green-700"
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleCancelEdit}
+                      className="h-8 w-8 text-red-600 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEditClick(user)}
+                    className="h-8 w-8"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
                 )}
               </TableCell>
             </TableRow>
