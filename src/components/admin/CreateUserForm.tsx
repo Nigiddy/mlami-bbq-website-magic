@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -60,7 +59,6 @@ const CreateUserForm = ({ onUserCreated }: CreateUserFormProps) => {
       }
 
       // Step 2: Directly insert/update the profile with the correct role
-      // This ensures the role is set even before the trigger runs
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({

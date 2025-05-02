@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userRole = profileData?.role || 'user';
           console.log("User role check:", user.email, userRole);
           
-          // Fix: Check for either 'admin' or 'cook' roles specifically
+          // Fix: Set the correct role flags based on the actual role value
           setIsAdmin(userRole === 'admin');
           setIsCook(userRole === 'cook');
           
