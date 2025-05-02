@@ -47,8 +47,8 @@ const ProtectedRoute = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Role check
-  if (requireAdmin && !isAdmin && requireCook && !isCook) {
+  // Role check - changed from AND to OR to allow either role
+  if ((requireAdmin && !isAdmin) && (requireCook && !isCook)) {
     console.log("User lacks required role, redirecting to home. isAdmin:", isAdmin, "isCook:", isCook);
     return <Navigate to="/" replace />;
   }

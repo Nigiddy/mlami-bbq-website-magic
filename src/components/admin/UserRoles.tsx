@@ -10,7 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { UserCog, UserPlus } from 'lucide-react';
+import { UserCog, UserPlus, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Import the refactored components
 import UserTable from './UserTable';
@@ -31,14 +32,16 @@ const UserRoles = () => {
   const [promoting, setPromoting] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string>('admin');
   const [activeTab, setActiveTab] = useState<string>('manage');
+  const [refreshFlag, setRefreshFlag] = useState<number>(0);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [refreshFlag]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('Fetching users...');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, email, full_name, role')
@@ -48,6 +51,7 @@ const UserRoles = () => {
         throw error;
       }
 
+      console.log('Users fetched:', data?.length || 0);
       setUsers(data || []);
     } catch (error: any) {
       console.error('Error fetching users:', error.message);
@@ -59,6 +63,10 @@ const UserRoles = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const refreshUserList = () => {
+    setRefreshFlag(prev => prev + 1);
   };
 
   const promoteUser = async (email: string, role: string) => {
@@ -108,7 +116,7 @@ const UserRoles = () => {
       });
 
       // Refresh the user list
-      fetchUsers();
+      refreshUserList();
     } catch (error: any) {
       console.error('Error promoting user:', error);
       toast({
@@ -123,6 +131,7 @@ const UserRoles = () => {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
+      console.log('Updating user role:', userId, newRole);
       const { error } = await supabase
         .from('profiles')
         .update({ role: newRole })
@@ -136,7 +145,8 @@ const UserRoles = () => {
       });
       
       // Refresh the user list
-      fetchUsers();
+      refreshUserList();
+      return Promise.resolve();
     } catch (error: any) {
       console.error('Error updating user role:', error);
       toast({
@@ -144,7 +154,12 @@ const UserRoles = () => {
         description: error.message || 'Failed to update user role',
         variant: 'destructive',
       });
+      return Promise.reject(error);
     }
+  };
+
+  const handleUserCreated = () => {
+    refreshUserList();
   };
 
   return (
@@ -182,13 +197,14 @@ const UserRoles = () => {
                 <UserTable 
                   users={users} 
                   loading={loading} 
-                  onUpdateRole={updateUserRole} 
+                  onUpdateRole={updateUserRole}
+                  onRefresh={refreshUserList}
                 />
               </div>
             </TabsContent>
             
             <TabsContent value="create">
-              <CreateUserForm onUserCreated={fetchUsers} />
+              <CreateUserForm onUserCreated={handleUserCreated} />
             </TabsContent>
           </Tabs>
         </CardContent>

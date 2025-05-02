@@ -9,9 +9,10 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Edit2, Save, X } from 'lucide-react';
+import { CheckCircle, XCircle, Edit2, Save, X, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface Profile {
   id: string;
@@ -24,11 +25,14 @@ interface UserTableProps {
   users: Profile[];
   loading: boolean;
   onUpdateRole: (userId: string, newRole: string) => Promise<void>;
+  onRefresh: () => void;
 }
 
-const UserTable = ({ users, loading, onUpdateRole }: UserTableProps) => {
+const UserTable = ({ users, loading, onUpdateRole, onRefresh }: UserTableProps) => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('');
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   if (loading) {
     return (
@@ -39,7 +43,19 @@ const UserTable = ({ users, loading, onUpdateRole }: UserTableProps) => {
   }
 
   if (users.length === 0) {
-    return <p className="text-gray-500 text-center py-4">No users found</p>;
+    return (
+      <div className="text-center py-6">
+        <p className="text-gray-500 mb-4">No users found</p>
+        <Button 
+          variant="outline" 
+          onClick={onRefresh}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh User List
+        </Button>
+      </div>
+    );
   }
 
   const getRoleBadgeVariant = (role: string | null) => {
@@ -56,8 +72,23 @@ const UserTable = ({ users, loading, onUpdateRole }: UserTableProps) => {
   };
 
   const handleSaveClick = async (userId: string) => {
-    await onUpdateRole(userId, selectedRole);
-    setEditingUserId(null);
+    try {
+      setUpdatingUserId(userId);
+      await onUpdateRole(userId, selectedRole);
+      setEditingUserId(null);
+      toast({
+        title: "Role Updated",
+        description: "User role has been successfully updated",
+      });
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update user role",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingUserId(null);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -67,6 +98,17 @@ const UserTable = ({ users, loading, onUpdateRole }: UserTableProps) => {
 
   return (
     <div className="rounded-md border">
+      <div className="flex justify-end p-2 bg-muted/20">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onRefresh}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -124,14 +166,20 @@ const UserTable = ({ users, loading, onUpdateRole }: UserTableProps) => {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleSaveClick(user.id)}
+                      disabled={updatingUserId === user.id}
                       className="h-8 w-8 text-green-600 hover:text-green-700"
                     >
-                      <Save className="h-4 w-4" />
+                      {updatingUserId === user.id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-t-2 border-green-500" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={handleCancelEdit}
+                      disabled={updatingUserId === user.id}
                       className="h-8 w-8 text-red-600 hover:text-red-700"
                     >
                       <X className="h-4 w-4" />
