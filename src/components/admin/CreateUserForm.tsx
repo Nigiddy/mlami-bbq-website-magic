@@ -39,6 +39,8 @@ const CreateUserForm = ({ onUserCreated }: CreateUserFormProps) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
+      console.log("Creating user with role:", values.role);
+      
       // Step 1: Create the user in auth
       const { data: userData, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
@@ -46,6 +48,7 @@ const CreateUserForm = ({ onUserCreated }: CreateUserFormProps) => {
         options: {
           data: {
             full_name: values.fullName || null,
+            role: values.role, // Add role to user metadata
           },
         }
       });
@@ -56,13 +59,20 @@ const CreateUserForm = ({ onUserCreated }: CreateUserFormProps) => {
         throw new Error('Failed to create user');
       }
 
-      // Step 2: Update the user's role in profiles table
-      const { error: updateError } = await supabase
+      // Step 2: Directly insert/update the profile with the correct role
+      // This ensures the role is set even before the trigger runs
+      const { error: profileError } = await supabase
         .from('profiles')
-        .update({ role: values.role })
-        .eq('id', userData.user.id);
+        .upsert({
+          id: userData.user.id,
+          email: values.email,
+          full_name: values.fullName || null,
+          role: values.role
+        }, {
+          onConflict: 'id'
+        });
 
-      if (updateError) throw updateError;
+      if (profileError) throw profileError;
 
       toast({
         title: 'User Created Successfully',
