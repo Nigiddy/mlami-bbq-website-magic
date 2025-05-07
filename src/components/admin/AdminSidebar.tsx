@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LayoutDashboard, ShoppingBag, Package, QrCode, Users, ChefHat } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 
 type AdminViewType = 'dashboard' | 'orders' | 'inventory' | 'qrcodes' | 'users' | 'cook';
 
