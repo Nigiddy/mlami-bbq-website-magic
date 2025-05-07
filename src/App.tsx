@@ -13,8 +13,8 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/cart";
-import { AuthProvider } from "./contexts/AuthContext";
-import { useAuth } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/auth"; // Updated import
+import { useAuth } from "./contexts/auth"; // Updated import
 
 const queryClient = new QueryClient();
 

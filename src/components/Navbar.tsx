@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { Menu, X, ChefHat } from 'lucide-react';
 import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
 import Cart from './Cart';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth'; // Updated import
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth'; // Updated import
 import Layout from '@/components/Layout';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { z } from 'zod';

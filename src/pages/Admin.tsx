@@ -11,7 +11,7 @@ import OrderDetails from '@/components/admin/OrderDetails';
 import UserRoles from '@/components/admin/UserRoles';
 import CookDashboard from '@/components/admin/CookDashboard';
 import { useOrders } from '@/hooks/useOrders';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth'; // Updated import
 import { LogOut, UserCircle } from 'lucide-react';
 import { 
   DropdownMenu,

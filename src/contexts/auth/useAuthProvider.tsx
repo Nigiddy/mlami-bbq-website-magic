@@ -1,44 +1,21 @@
 
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-type AuthContextType = {
-  user: User | null;
-  session: Session | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  isLoading: boolean;
-  isAdmin: boolean;
-  isCook: boolean;
-  roleChecked: boolean; // Flag to track if role check has completed
-};
-
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  session: null,
-  signIn: async () => {},
-  signOut: async () => {},
-  isLoading: true,
-  isAdmin: false,
-  isCook: false,
-  roleChecked: false
-});
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function useAuthProvider() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCook, setIsCook] = useState(false);
-  const [roleChecked, setRoleChecked] = useState(false); // Track if role check has completed
+  const [roleChecked, setRoleChecked] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // Check if user has specific role - separate effect to handle role checking
+  // Check user role when user changes
   useEffect(() => {
     const checkUserRole = async () => {
       if (!user) {
@@ -114,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
+  // Set up initial session and auth state listener
   useEffect(() => {
     // Set up initial session
     const getSession = async () => {
@@ -156,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [navigate, toast]);
 
+  // Auth methods
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
@@ -203,20 +182,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  return (
-    <AuthContext.Provider value={{ 
-      user, 
-      session, 
-      signIn, 
-      signOut, 
-      isLoading, 
-      isAdmin, 
-      isCook, 
-      roleChecked 
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => useContext(AuthContext);
+  return {
+    user,
+    session,
+    signIn,
+    signOut,
+    isLoading,
+    isAdmin,
+    isCook,
+    roleChecked
+  };
+}
