@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 // Import the refactored components
 import UserTable from './UserTable';
 import PromoteUserForm from './PromoteUserForm';
-import CreateUserForm from './CreateUserForm';
+import CreateUserForm from './admin/UserRoles/CreateUserForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Profile {
