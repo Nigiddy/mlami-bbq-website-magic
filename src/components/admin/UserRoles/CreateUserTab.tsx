@@ -1,5 +1,5 @@
 
-import CreateUserForm from '../CreateUserForm';
+import CreateUserForm from './CreateUserForm';
 
 interface CreateUserTabProps {
   onUserCreated: () => void;
