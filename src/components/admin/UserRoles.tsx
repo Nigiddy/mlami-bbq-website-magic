@@ -1,3 +1,3 @@
 
-import { UserRoles } from './UserRoles/index';
+import UserRoles from './UserRoles/index';
 export default UserRoles;
