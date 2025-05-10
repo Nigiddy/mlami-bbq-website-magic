@@ -8,11 +8,10 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Edit2, Save, X, RefreshCw } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import UserTableRow from './UserTableRow';
 
 interface Profile {
   id: string;
@@ -57,14 +56,6 @@ const UserTable = ({ users, loading, onUpdateRole, onRefresh }: UserTableProps) 
       </div>
     );
   }
-
-  const getRoleBadgeVariant = (role: string | null) => {
-    switch (role) {
-      case 'admin': return 'default';
-      case 'cook': return 'secondary';
-      default: return 'outline';
-    }
-  };
 
   const handleEditClick = (user: Profile) => {
     setEditingUserId(user.id);
@@ -122,81 +113,17 @@ const UserTable = ({ users, loading, onUpdateRole, onRefresh }: UserTableProps) 
         </TableHeader>
         <TableBody>
           {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.email}</TableCell>
-              <TableCell>{user.full_name || '-'}</TableCell>
-              <TableCell>
-                {editingUserId === user.id ? (
-                  <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="cook">Cook</SelectItem>
-                      <SelectItem value="user">User</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Badge 
-                    variant={getRoleBadgeVariant(user.role)}
-                  >
-                    {user.role || 'user'}
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                {user.role === 'admin' ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-gray-300" />
-                )}
-              </TableCell>
-              <TableCell>
-                {user.role === 'cook' ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-gray-300" />
-                )}
-              </TableCell>
-              <TableCell>
-                {editingUserId === user.id ? (
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleSaveClick(user.id)}
-                      disabled={updatingUserId === user.id}
-                      className="h-8 w-8 text-green-600 hover:text-green-700"
-                    >
-                      {updatingUserId === user.id ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-t-2 border-green-500" />
-                      ) : (
-                        <Save className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleCancelEdit}
-                      disabled={updatingUserId === user.id}
-                      className="h-8 w-8 text-red-600 hover:text-red-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditClick(user)}
-                    className="h-8 w-8"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
+            <UserTableRow
+              key={user.id}
+              user={user}
+              editingUserId={editingUserId}
+              selectedRole={selectedRole}
+              updatingUserId={updatingUserId}
+              onEditClick={handleEditClick}
+              onSaveClick={handleSaveClick}
+              onCancelEdit={handleCancelEdit}
+              setSelectedRole={setSelectedRole}
+            />
           ))}
         </TableBody>
       </Table>
