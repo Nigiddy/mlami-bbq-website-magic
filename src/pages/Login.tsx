@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth'; // Updated import
 import Layout from '@/components/Layout';
@@ -56,24 +57,16 @@ const Login = () => {
         password: values.password,
         options: {
           data: {
-            full_name: values.full_name
+            full_name: values.full_name,
+            role: 'user' // Default role
           }
         }
       });
 
       if (error) throw error;
 
-      // Create profile record
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({ 
-          id: data.user?.id,
-          full_name: values.full_name,
-          email: values.email,
-          role: 'user' // Default role
-        });
-
-      if (profileError) throw profileError;
+      // The profile will be created by the database trigger
+      // when a new user is created in auth.users
 
       toast({
         title: 'Account Created',

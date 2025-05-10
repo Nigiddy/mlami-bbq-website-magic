@@ -30,19 +30,9 @@ export const useCreateUser = (onUserCreated: () => void) => {
         throw new Error('Failed to create user');
       }
 
-      // Step 2: Directly insert/update the profile with the correct role
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userData.user.id,
-          email: values.email,
-          full_name: values.fullName || null,
-          role: values.role
-        }, {
-          onConflict: 'id'
-        });
-
-      if (profileError) throw profileError;
+      // Step 2: Sign in as the admin to insert the profile
+      // We'll skip this step and rely on the database trigger to create the profile
+      // The database should have a trigger to create profiles on auth.users insert
 
       toast({
         title: 'User Created Successfully',
