@@ -28,40 +28,35 @@ export function useAuthProvider() {
       try {
         console.log("Checking role for user:", user.email);
         
-        // Try to retrieve the user's role
-        // First approach: Check user metadata (for newly created users)
-        let userRole = user.user_metadata?.role;
+        // Query the profiles table first as it's the most reliable source of role information
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
         
-        if (!userRole) {
-          // Second approach: Query the profiles table
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
+        if (profileError) {
+          console.error("Error getting profile:", profileError);
+          // Fall back to user metadata if profile query fails
+          const userRole = user.user_metadata?.role || 'user';
+          setIsAdmin(userRole === 'admin');
+          setIsCook(userRole === 'cook');
+        } else {
+          const userRole = profileData?.role || 'user';
+          console.log("User role check:", user.email, userRole);
           
-          if (profileError) {
-            console.error("Error getting profile:", profileError);
-            // Default to user role if we can't determine the role
-            userRole = 'user';
-          } else {
-            userRole = profileData?.role || 'user';
+          // Set the correct role flags
+          setIsAdmin(userRole === 'admin');
+          setIsCook(userRole === 'cook');
+          
+          console.log("Role flags set:", {isAdmin: userRole === 'admin', isCook: userRole === 'cook'});
+          
+          // Update user metadata if it doesn't match the profile role
+          if (user && (!user.user_metadata.role || user.user_metadata.role !== userRole)) {
+            await supabase.auth.updateUser({
+              data: { role: userRole }
+            });
           }
-        }
-        
-        console.log("User role check:", user.email, userRole);
-        
-        // Set the correct role flags
-        setIsAdmin(userRole === 'admin');
-        setIsCook(userRole === 'cook');
-        
-        console.log("Role flags set:", {isAdmin: userRole === 'admin', isCook: userRole === 'cook'});
-        
-        // Update user metadata if needed
-        if (user && !user.user_metadata.role) {
-          await supabase.auth.updateUser({
-            data: { role: userRole }
-          });
         }
       } catch (error: any) {
         console.error("Error checking user role:", error);
@@ -112,6 +107,7 @@ export function useAuthProvider() {
         // Reset role check state when signing out
         setRoleChecked(false);
         setIsAdmin(false);
+        setIsCook(false);
         
         toast({
           title: 'Logged Out',

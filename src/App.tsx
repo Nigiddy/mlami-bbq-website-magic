@@ -13,8 +13,8 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/cart";
-import { AuthProvider } from "./contexts/auth"; // Updated import
-import { useAuth } from "./contexts/auth"; // Updated import
+import { AuthProvider } from "./contexts/auth"; 
+import { useAuth } from "./contexts/auth"; 
 
 const queryClient = new QueryClient();
 
@@ -47,10 +47,15 @@ const ProtectedRoute = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Fixed OR logic: Only redirect if both conditions are true:
-  // 1. Admin access is required AND user is not admin
-  // 2. Cook access is required AND user is not cook
-  if ((requireAdmin && !isAdmin) && (requireCook && !isCook)) {
+  // Corrected role-based logic:
+  // If requireAdmin is true, then user must be admin OR
+  // If requireCook is true, then user must be cook
+  const hasRequiredRole = 
+    (requireAdmin && isAdmin) || 
+    (requireCook && isCook);
+    
+  // If any role is required but user doesn't have any of them
+  if ((requireAdmin || requireCook) && !hasRequiredRole) {
     console.log("User lacks required role, redirecting to home. isAdmin:", isAdmin, "isCook:", isCook);
     return <Navigate to="/" replace />;
   }
