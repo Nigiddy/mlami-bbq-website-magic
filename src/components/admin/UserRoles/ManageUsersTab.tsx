@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import UserTable from './UserTable';
 import PromoteUserForm from '../PromoteUserForm';
 
@@ -22,6 +22,7 @@ const ManageUsersTab = ({ refreshFlag, onRefresh }: ManageUsersTabProps) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [promoting, setPromoting] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string>('admin');
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchUsers();
@@ -31,6 +32,8 @@ const ManageUsersTab = ({ refreshFlag, onRefresh }: ManageUsersTabProps) => {
     try {
       setLoading(true);
       console.log('Fetching users...');
+      
+      // First get all users from auth.users via profiles table
       const { data, error } = await supabase
         .from('profiles')
         .select('id, email, full_name, role')
