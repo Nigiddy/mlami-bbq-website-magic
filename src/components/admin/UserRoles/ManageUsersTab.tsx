@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import UserTable from './UserTable';
+import PaginatedUserTable from './PaginatedUserTable';
 import PromoteUserForm from '../PromoteUserForm';
 
 interface Profile {
@@ -157,11 +157,12 @@ const ManageUsersTab = ({ refreshFlag, onRefresh }: ManageUsersTabProps) => {
 
       <div className="mt-8">
         <h3 className="text-lg font-medium mb-4">User Roles</h3>
-        <UserTable 
+        <PaginatedUserTable
           users={users} 
           loading={loading} 
           onUpdateRole={updateUserRole}
           onRefresh={onRefresh}
+          pageSize={8}
         />
       </div>
     </div>
