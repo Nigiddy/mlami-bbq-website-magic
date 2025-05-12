@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { 
   Table, 
   TableBody, 
-  TableCell, 
   TableHead, 
   TableHeader, 
   TableRow 
@@ -12,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import UserTableRow from './UserTableRow';
+import UserTableLoading from './UserTableLoading';
+import UserTableEmpty from './UserTableEmpty';
 
 interface Profile {
   id: string;
@@ -34,27 +35,11 @@ const UserTable = ({ users, loading, onUpdateRole, onRefresh }: UserTableProps) 
   const { toast } = useToast();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-6">
-        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-bbq-orange"></div>
-      </div>
-    );
+    return <UserTableLoading />;
   }
 
   if (users.length === 0) {
-    return (
-      <div className="text-center py-6">
-        <p className="text-gray-500 mb-4">No users found</p>
-        <Button 
-          variant="outline" 
-          onClick={onRefresh}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh User List
-        </Button>
-      </div>
-    );
+    return <UserTableEmpty onRefresh={onRefresh} />;
   }
 
   const handleEditClick = (user: Profile) => {
