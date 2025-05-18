@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import PaymentForm, { PaymentFormValues } from './PaymentForm';
 import PaymentStatus from './PaymentStatus';
+import { CartItem } from '@/contexts/cart/types';
 
 interface CartFooterProps {
   subtotal: number;
@@ -15,6 +16,10 @@ interface CartFooterProps {
   paymentSent: boolean;
   lastError?: string | null;
   paymentStatus?: 'idle' | 'pending' | 'success' | 'failed';
+  items: CartItem[];
+  phoneNumber?: string;
+  transactionId?: string | null;
+  onCloseReceipt?: () => void;
 }
 
 const CartFooter: React.FC<CartFooterProps> = ({
@@ -27,7 +32,11 @@ const CartFooter: React.FC<CartFooterProps> = ({
   isProcessing,
   paymentSent,
   lastError,
-  paymentStatus = 'idle'
+  paymentStatus = 'idle',
+  items,
+  phoneNumber = '',
+  transactionId,
+  onCloseReceipt
 }) => {
   return (
     <div className="space-y-4">
@@ -57,9 +66,20 @@ const CartFooter: React.FC<CartFooterProps> = ({
         <PaymentStatus 
           onCheckStatus={onCheckStatus}
           onCancelPayment={onCancelPayment}
+          onCloseReceipt={onCloseReceipt}
           isProcessing={isProcessing}
           lastError={lastError}
           paymentStatus={paymentStatus}
+          transactionDetails={
+            paymentStatus === 'success' ? {
+              transactionId,
+              phoneNumber,
+              tableNumber: tableNumber || '',
+              items,
+              subtotal,
+              paymentTime: new Date().toISOString()
+            } : undefined
+          }
         />
       )}
     </div>

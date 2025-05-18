@@ -2,21 +2,34 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle, CheckCircle, RefreshCw, WifiOff } from 'lucide-react';
+import Receipt from './Receipt';
+import { CartItem } from '@/contexts/cart/types';
 
 interface PaymentStatusProps {
   onCheckStatus: () => Promise<void>;
   onCancelPayment: () => void;
+  onCloseReceipt?: () => void;
   isProcessing: boolean;
   lastError?: string | null;
   paymentStatus?: 'idle' | 'pending' | 'success' | 'failed';
+  transactionDetails?: {
+    transactionId?: string | null;
+    phoneNumber: string;
+    tableNumber: string;
+    items: CartItem[];
+    subtotal: number;
+    paymentTime?: string;
+  };
 }
 
 const PaymentStatus: React.FC<PaymentStatusProps> = ({
   onCheckStatus,
   onCancelPayment,
+  onCloseReceipt,
   isProcessing,
   lastError,
-  paymentStatus = 'pending'
+  paymentStatus = 'pending',
+  transactionDetails
 }) => {
   // Determine which icon to show based on status and error
   const getStatusIcon = () => {
@@ -67,6 +80,21 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
       ? 'bg-red-50 border-red-100'
       : 'bg-yellow-50 border-yellow-100';
 
+  // If payment is successful and we have transaction details, show the receipt
+  if (paymentStatus === 'success' && transactionDetails) {
+    return (
+      <Receipt
+        transactionId={transactionDetails.transactionId}
+        phoneNumber={transactionDetails.phoneNumber}
+        tableNumber={transactionDetails.tableNumber}
+        items={transactionDetails.items}
+        subtotal={transactionDetails.subtotal}
+        paymentTime={transactionDetails.paymentTime}
+        onClose={onCloseReceipt || onCancelPayment}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className={`p-4 ${bgColor} border rounded-md`}>
@@ -75,7 +103,7 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
           <h4 className="font-medium">{getStatusTitle()}</h4>
         </div>
         
-        <p className="text-sm text-gray-600 mb-3">
+        <p className="text-gray-600 text-sm mb-3">
           {getStatusMessage()}
         </p>
         

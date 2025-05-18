@@ -24,9 +24,12 @@ const Cart: React.FC = () => {
     resetTransaction,
     isProcessing,
     lastError,
-    paymentStatus
+    paymentStatus,
+    transactionId,
+    checkoutRequestId
   } = useMpesaTransaction();
   const [paymentSent, setPaymentSent] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
 
   useEffect(() => {
     // Parse URL for table param
@@ -51,6 +54,7 @@ const Cart: React.FC = () => {
         }
         setPaymentSent(false);
         resetTransaction();
+        setPhoneNumber('');
       }, 300);
       
       return () => clearTimeout(timer);
@@ -76,6 +80,9 @@ const Cart: React.FC = () => {
       price: parseFloat(item.price),
       quantity: item.quantity || 1
     }));
+
+    // Store phone number for the receipt
+    setPhoneNumber(values.phoneNumber);
 
     const success = await initiatePayment({
       phoneNumber: values.phoneNumber,
@@ -110,10 +117,16 @@ const Cart: React.FC = () => {
   const handleCancelPayment = () => {
     setPaymentSent(false);
     resetTransaction();
+    setPhoneNumber('');
     toast({
       title: "Payment Cancelled",
       description: "M-Pesa payment request has been cancelled.",
     });
+  };
+
+  // Function to handle receipt close
+  const handleCloseReceipt = () => {
+    setOpen(false); // Close the drawer after viewing receipt
   };
 
   return (
@@ -175,10 +188,14 @@ const Cart: React.FC = () => {
                 onMpesaPayment={handleMpesaPayment}
                 onCheckStatus={handleCheckStatus}
                 onCancelPayment={handleCancelPayment}
+                onCloseReceipt={handleCloseReceipt}
                 isProcessing={isProcessing}
                 paymentSent={paymentSent}
                 lastError={lastError}
                 paymentStatus={paymentStatus}
+                items={items}
+                phoneNumber={phoneNumber}
+                transactionId={transactionId}
               />
             </DrawerFooter>
           )}

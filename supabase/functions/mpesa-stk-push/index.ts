@@ -61,6 +61,14 @@ serve(async (req) => {
       );
     }
 
+    // Format phone number to ensure it starts with 254
+    let formattedPhone = phoneNumber;
+    if (phoneNumber.startsWith("+")) {
+      formattedPhone = phoneNumber.substring(1);
+    } else if (phoneNumber.startsWith("0")) {
+      formattedPhone = "254" + phoneNumber.substring(1);
+    }
+
     // Determine API endpoint based on environment (production or sandbox)
     const isProd = Deno.env.get("MPESA_ENV") === "production";
     const baseUrl = isProd 
@@ -113,10 +121,10 @@ serve(async (req) => {
           Password: password,
           Timestamp: timestamp,
           TransactionType: transactionType,
-          Amount: amount,
-          PartyA: phoneNumber,
+          Amount: Math.round(amount),
+          PartyA: formattedPhone,
           PartyB: shortCode,
-          PhoneNumber: phoneNumber,
+          PhoneNumber: formattedPhone,
           CallBackURL: callbackUrl,
           AccountReference: `Table-${tableNumber}`,
           TransactionDesc: "BBQ Restaurant Payment",
@@ -140,8 +148,8 @@ serve(async (req) => {
     const { data: transaction, error: transactionError } = await supabase
       .from("mpesa_transactions")
       .insert({
-        phone_number: phoneNumber,
-        amount: amount,
+        phone_number: formattedPhone,
+        amount: Math.round(amount), // Ensure integer for amount
         table_number: tableNumber,
         checkout_request_id: stkPushData.CheckoutRequestID,
         merchant_request_id: stkPushData.MerchantRequestID,

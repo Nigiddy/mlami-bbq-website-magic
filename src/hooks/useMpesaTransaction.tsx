@@ -41,6 +41,7 @@ export const useMpesaTransaction = () => {
         return false;
       }
 
+      console.log("Initiating payment for", paymentRequest.phoneNumber, "of amount", paymentRequest.amount);
       const response = await initiateMpesaPayment(paymentRequest);
       
       if (response.success) {
@@ -102,6 +103,12 @@ export const useMpesaTransaction = () => {
       
       if (response.success) {
         setPaymentStatus('success');
+        
+        // If we have a receipt number from the response, update the transaction ID
+        if (response.mpesaReceiptNumber) {
+          setTransactionId(response.mpesaReceiptNumber);
+        }
+        
         toast({
           title: "Payment Successful",
           description: "Your M-Pesa payment was completed successfully",
