@@ -32,6 +32,19 @@ serve(async (req) => {
     const passKey = Deno.env.get("MPESA_PASSKEY") ?? "";
     const callbackUrl = Deno.env.get("MPESA_CALLBACK_URL") ?? "";
     
+    if (!consumerKey || !consumerSecret || !shortCode || !passKey) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Missing M-Pesa API credentials. Please check your environment variables.",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
+    
     // Parse request body
     const { phoneNumber, amount, tableNumber, items } = await req.json();
     
@@ -48,10 +61,16 @@ serve(async (req) => {
       );
     }
 
+    // Determine API endpoint based on environment (production or sandbox)
+    const isProd = Deno.env.get("MPESA_ENV") === "production";
+    const baseUrl = isProd 
+      ? "https://api.safaricom.co.ke" 
+      : "https://sandbox.safaricom.co.ke";
+
     // Generate access token for M-Pesa API
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
     const tokenResponse = await fetch(
-      "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+      `${baseUrl}/oauth/v1/generate?grant_type=client_credentials`,
       {
         method: "GET",
         headers: {
@@ -61,6 +80,7 @@ serve(async (req) => {
     );
 
     if (!tokenResponse.ok) {
+      console.error("Failed to get access token:", await tokenResponse.text());
       throw new Error("Failed to get access token from M-Pesa API");
     }
     
@@ -76,9 +96,12 @@ serve(async (req) => {
     // Generate password (Base64(Shortcode+Passkey+Timestamp))
     const password = btoa(`${shortCode}${passKey}${timestamp}`);
     
+    // Determine the correct transaction type - for Till use "CustomerBuyGoodsOnline"
+    const transactionType = isProd ? "CustomerBuyGoodsOnline" : "CustomerPayBillOnline";
+    
     // Prepare STK Push Request
     const stkPushResponse = await fetch(
-      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      `${baseUrl}/mpesa/stkpush/v1/processrequest`,
       {
         method: "POST",
         headers: {
@@ -89,7 +112,7 @@ serve(async (req) => {
           BusinessShortCode: shortCode,
           Password: password,
           Timestamp: timestamp,
-          TransactionType: "CustomerPayBillOnline",
+          TransactionType: transactionType,
           Amount: amount,
           PartyA: phoneNumber,
           PartyB: shortCode,
@@ -101,7 +124,13 @@ serve(async (req) => {
       }
     );
 
+    if (!stkPushResponse.ok) {
+      console.error("STK Push failed:", await stkPushResponse.text());
+      throw new Error("Failed to initiate STK Push");
+    }
+
     const stkPushData = await stkPushResponse.json();
+    console.log("STK Push Response:", stkPushData);
     
     if (stkPushData.ResponseCode !== "0") {
       throw new Error(`STK Push failed: ${stkPushData.ResponseDescription}`);

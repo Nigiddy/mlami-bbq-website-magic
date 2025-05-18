@@ -22,10 +22,16 @@ export const formatPhoneNumber = (phoneNumber: string): string => {
   // Remove any spaces
   formattedPhone = formattedPhone.replace(/\s/g, '');
   
+  // Handle different formats of Kenyan phone numbers
   if (formattedPhone.startsWith('0')) {
     formattedPhone = '254' + formattedPhone.substring(1);
   } else if (formattedPhone.startsWith('+254')) {
     formattedPhone = formattedPhone.substring(1);
+  } else if (formattedPhone.startsWith('254')) {
+    // Already in the right format
+  } else if (formattedPhone.startsWith('7')) {
+    // Assuming this is a Kenyan number starting with 7
+    formattedPhone = '254' + formattedPhone;
   }
   
   return formattedPhone;
@@ -60,7 +66,7 @@ export const initiateMpesaPayment = async (
       },
     });
 
-    // Race between fetch and timeout (10 seconds)
+    // Race between fetch and timeout (15 seconds)
     const { data, error } = await Promise.race([
       fetchPromise,
       timeoutPromise(15000).then(() => {
@@ -93,8 +99,8 @@ export const initiateMpesaPayment = async (
     console.log('M-Pesa STK Push response:', data);
 
     return {
-      success: true,
-      message: 'STK Push sent. Please check your phone to complete payment.',
+      success: data.success,
+      message: data.message || 'STK Push sent. Please check your phone to complete payment.',
       transactionId: data.transactionId,
       checkoutRequestId: data.checkoutRequestId,
     };
@@ -130,7 +136,7 @@ export const checkPaymentStatus = async (checkoutRequestId: string): Promise<Mpe
       },
     });
 
-    // Race between fetch and timeout (10 seconds)
+    // Race between fetch and timeout (15 seconds)
     const { data, error } = await Promise.race([
       fetchPromise,
       timeoutPromise(15000).then(() => {
