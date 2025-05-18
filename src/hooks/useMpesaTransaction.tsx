@@ -105,8 +105,8 @@ export const useMpesaTransaction = () => {
         setPaymentStatus('success');
         
         // If we have a receipt number from the response, update the transaction ID
-        if (response.mpesaReceiptNumber) {
-          setTransactionId(response.mpesaReceiptNumber);
+        if (response.receiptNumber) {
+          setTransactionId(response.receiptNumber);
         }
         
         toast({

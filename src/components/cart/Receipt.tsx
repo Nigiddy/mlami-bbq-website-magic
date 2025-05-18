@@ -148,26 +148,28 @@ const Receipt: React.FC<ReceiptProps> = ({
       </Card>
 
       {/* Print-only styles */}
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            .print\\:bg-white,
+            .print\\:bg-white * {
+              visibility: visible;
+            }
+            .print\\:bg-white {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+            }
+            button {
+              display: none !important;
+            }
           }
-          .print\\:bg-white,
-          .print\\:bg-white * {
-            visibility: visible;
-          }
-          .print\\:bg-white {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          button {
-            display: none !important;
-          }
-        }
-      `}</style>
+        `
+      }} />
     </div>
   );
 };
