@@ -8,12 +8,14 @@ export const useMpesaTransaction = () => {
   const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
   const { toast } = useToast();
 
   const initiatePayment = useCallback(async (paymentRequest: MpesaPaymentRequest): Promise<boolean> => {
     setIsProcessing(true);
     setLastError(null);
+    setErrorDetails(null);
     setPaymentStatus('pending');
     
     try {
@@ -61,12 +63,24 @@ export const useMpesaTransaction = () => {
         return true;
       } else {
         setPaymentStatus('failed');
+        
+        // Store detailed error information
+        if (response.errorDetails) {
+          setErrorDetails(response.errorDetails);
+          console.error("Detailed error information:", response.errorDetails);
+        }
+        
+        const errorMsg = response.errorCode 
+          ? `Error code: ${response.errorCode}. ${response.message || "Unknown error"}` 
+          : response.message || "Unknown error";
+          
         toast({
           title: "Payment Failed",
-          description: response.message || "Failed to initiate M-Pesa payment",
+          description: errorMsg,
           variant: "destructive",
         });
-        setLastError(response.message || "Unknown error");
+        
+        setLastError(errorMsg);
         return false;
       }
     } catch (error) {
@@ -97,6 +111,7 @@ export const useMpesaTransaction = () => {
     
     setIsProcessing(true);
     setLastError(null);
+    setErrorDetails(null);
     
     try {
       const response = await checkPaymentStatus(checkoutRequestId);
@@ -115,12 +130,23 @@ export const useMpesaTransaction = () => {
         });
         return true;
       } else {
+        // Store detailed error information
+        if (response.errorDetails) {
+          setErrorDetails(response.errorDetails);
+          console.error("Detailed error information:", response.errorDetails);
+        }
+        
+        const errorMsg = response.errorCode 
+          ? `Error code: ${response.errorCode}. ${response.message || "Unknown error"}` 
+          : response.message || "Payment has not been completed yet";
+        
         toast({
           title: "Payment Pending",
-          description: response.message || "Payment has not been completed yet",
+          description: errorMsg,
           variant: "destructive",
         });
-        setLastError(response.message || "Payment not completed");
+        
+        setLastError(errorMsg);
         return false;
       }
     } catch (error) {
@@ -142,6 +168,7 @@ export const useMpesaTransaction = () => {
     setCheckoutRequestId(null);
     setTransactionId(null);
     setLastError(null);
+    setErrorDetails(null);
     setPaymentStatus('idle');
   }, []);
 
@@ -153,6 +180,7 @@ export const useMpesaTransaction = () => {
     checkoutRequestId,
     transactionId,
     lastError,
+    errorDetails,
     paymentStatus
   };
 };

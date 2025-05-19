@@ -1,3 +1,4 @@
+
 import { getSupabaseClient } from '@/lib/supabase';
 
 export type MpesaPaymentRequest = {
@@ -12,7 +13,9 @@ export type MpesaResponse = {
   message: string;
   transactionId?: string;
   checkoutRequestId?: string;
-  receiptNumber?: string;  // Added receiptNumber property
+  receiptNumber?: string;
+  errorCode?: string;
+  errorDetails?: string;
 };
 
 export const formatPhoneNumber = (phoneNumber: string): string => {
@@ -75,16 +78,41 @@ export const initiateMpesaPayment = async (
     ]) as any;
 
     if (error) {
-      console.error('M-Pesa STK Push error:', error);
+      console.error('M-Pesa STK Push error details:', {
+        message: error.message,
+        name: error.name,
+        code: error.code,
+        context: error.context,
+        stack: error.stack,
+        details: error
+      });
+      
+      // Check if there's an error response from the edge function
+      if (error.context && error.context.response && error.context.response.error) {
+        try {
+          const errorResponse = JSON.parse(error.context.response.error);
+          return {
+            success: false,
+            message: errorResponse.message || 'Failed to initiate payment',
+            errorCode: errorResponse.code,
+            errorDetails: JSON.stringify(errorResponse)
+          };
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+      }
+      
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError') || error.message?.includes('network')) {
         return {
           success: false,
           message: 'Network error. Please check your internet connection and try again.',
+          errorDetails: error.message
         };
       }
       return {
         success: false,
         message: `Failed to initiate payment: ${error.message || 'Unknown error'}`,
+        errorDetails: error.stack
       };
     }
 
@@ -93,6 +121,7 @@ export const initiateMpesaPayment = async (
       return {
         success: false,
         message: 'Failed to get response from payment service. Please try again.',
+        errorCode: 'NO_DATA'
       };
     }
 
@@ -109,6 +138,7 @@ export const initiateMpesaPayment = async (
     
     // Better error handling for different types of errors
     let errorMessage = 'An unexpected error occurred. Please try again later.';
+    let errorDetails = error.stack || JSON.stringify(error);
     
     if (error.message?.includes('timeout') || error.message?.includes('time out')) {
       errorMessage = 'Connection timeout. The server is taking too long to respond. Please try again.';
@@ -119,6 +149,7 @@ export const initiateMpesaPayment = async (
     return {
       success: false,
       message: errorMessage,
+      errorDetails
     };
   }
 };
@@ -145,16 +176,40 @@ export const checkPaymentStatus = async (checkoutRequestId: string): Promise<Mpe
     ]) as any;
 
     if (error) {
-      console.error('M-Pesa status check error:', error);
+      console.error('M-Pesa status check error details:', {
+        message: error.message,
+        name: error.name,
+        code: error.code,
+        context: error.context,
+        stack: error.stack
+      });
+      
+      // Check if there's an error response from the edge function
+      if (error.context && error.context.response && error.context.response.error) {
+        try {
+          const errorResponse = JSON.parse(error.context.response.error);
+          return {
+            success: false,
+            message: errorResponse.message || 'Failed to check payment status',
+            errorCode: errorResponse.code,
+            errorDetails: JSON.stringify(errorResponse)
+          };
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+      }
+      
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError') || error.message?.includes('network')) {
         return {
           success: false,
           message: 'Network error. Please check your internet connection and try again.',
+          errorDetails: error.message
         };
       }
       return {
         success: false,
         message: `Failed to check payment status: ${error.message || 'Unknown error'}`,
+        errorDetails: error.stack
       };
     }
 
@@ -163,6 +218,7 @@ export const checkPaymentStatus = async (checkoutRequestId: string): Promise<Mpe
       return {
         success: false,
         message: 'Failed to get response from payment service. Please try again.',
+        errorCode: 'NO_DATA'
       };
     }
 
@@ -172,13 +228,14 @@ export const checkPaymentStatus = async (checkoutRequestId: string): Promise<Mpe
       success: data.success,
       message: data.message,
       transactionId: data.transactionId,
-      receiptNumber: data.receiptNumber, // Added receiptNumber mapping here
+      receiptNumber: data.receiptNumber,
     };
   } catch (error: any) {
     console.error('Payment status check error:', error);
     
     // Better error handling for different types of errors
     let errorMessage = 'Failed to check payment status due to a connection issue. Please try again.';
+    let errorDetails = error.stack || JSON.stringify(error);
     
     if (error.message?.includes('timeout') || error.message?.includes('time out')) {
       errorMessage = 'Connection timeout while checking status. Please try again in a few moments.';
@@ -189,6 +246,7 @@ export const checkPaymentStatus = async (checkoutRequestId: string): Promise<Mpe
     return {
       success: false,
       message: errorMessage,
+      errorDetails
     };
   }
 };

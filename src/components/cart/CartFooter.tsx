@@ -15,6 +15,7 @@ interface CartFooterProps {
   isProcessing: boolean;
   paymentSent: boolean;
   lastError?: string | null;
+  errorDetails?: string | null;
   paymentStatus?: 'idle' | 'pending' | 'success' | 'failed';
   items: CartItem[];
   phoneNumber?: string;
@@ -32,6 +33,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
   isProcessing,
   paymentSent,
   lastError,
+  errorDetails,
   paymentStatus = 'idle',
   items,
   phoneNumber = '',
@@ -69,6 +71,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
           onCloseReceipt={onCloseReceipt}
           isProcessing={isProcessing}
           lastError={lastError}
+          errorDetails={errorDetails}
           paymentStatus={paymentStatus}
           transactionDetails={
             paymentStatus === 'success' ? {

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertTriangle, CheckCircle, RefreshCw, WifiOff } from 'lucide-react';
+import { Loader2, AlertTriangle, CheckCircle, RefreshCw, WifiOff, Info } from 'lucide-react';
 import Receipt from './Receipt';
 import { CartItem } from '@/contexts/cart/types';
 
@@ -11,6 +11,7 @@ interface PaymentStatusProps {
   onCloseReceipt?: () => void;
   isProcessing: boolean;
   lastError?: string | null;
+  errorDetails?: string | null;
   paymentStatus?: 'idle' | 'pending' | 'success' | 'failed';
   transactionDetails?: {
     transactionId?: string | null;
@@ -28,6 +29,7 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
   onCloseReceipt,
   isProcessing,
   lastError,
+  errorDetails,
   paymentStatus = 'pending',
   transactionDetails
 }) => {
@@ -58,6 +60,10 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
       return "Connection Issue";
     }
     
+    if (lastError?.includes('Error code:')) {
+      return "Payment Error";
+    }
+    
     return "Payment Initiated";
   };
   
@@ -69,6 +75,10 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
     
     if (lastError?.includes('Network error') || lastError?.includes('connection')) {
       return "There seems to be a network issue. Please check your internet connection and try again.";
+    }
+    
+    if (lastError) {
+      return lastError;
     }
     
     return "An M-Pesa STK push has been sent to your phone. Please enter your PIN to complete the payment.";
@@ -95,6 +105,8 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
     );
   }
 
+  const [showDetails, setShowDetails] = React.useState(false);
+
   return (
     <div className="space-y-4">
       <div className={`p-4 ${bgColor} border rounded-md`}>
@@ -110,6 +122,26 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
         {lastError && (
           <div className="p-2 mb-3 bg-red-50 border border-red-100 rounded text-sm text-red-700">
             {lastError}
+          </div>
+        )}
+        
+        {errorDetails && (
+          <div className="mt-2 mb-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs flex items-center gap-1"
+              onClick={() => setShowDetails(!showDetails)}
+            >
+              <Info className="h-3 w-3" />
+              {showDetails ? "Hide Technical Details" : "Show Technical Details"}
+            </Button>
+            
+            {showDetails && (
+              <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-xs font-mono overflow-x-auto max-h-32 overflow-y-auto">
+                {errorDetails}
+              </div>
+            )}
           </div>
         )}
         
