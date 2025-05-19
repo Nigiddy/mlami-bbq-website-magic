@@ -1,4 +1,3 @@
-
 import { getSupabaseClient } from '@/lib/supabase';
 
 export type MpesaPaymentRequest = {
@@ -13,6 +12,7 @@ export type MpesaResponse = {
   message: string;
   transactionId?: string;
   checkoutRequestId?: string;
+  receiptNumber?: string;  // Added receiptNumber property
 };
 
 export const formatPhoneNumber = (phoneNumber: string): string => {
@@ -172,6 +172,7 @@ export const checkPaymentStatus = async (checkoutRequestId: string): Promise<Mpe
       success: data.success,
       message: data.message,
       transactionId: data.transactionId,
+      receiptNumber: data.receiptNumber, // Added receiptNumber mapping here
     };
   } catch (error: any) {
     console.error('Payment status check error:', error);
