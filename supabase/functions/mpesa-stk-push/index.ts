@@ -41,7 +41,10 @@ serve(async (req) => {
       shortCode: !!shortCode,
       passKey: !!passKey,
       callbackUrl: !!callbackUrl,
-      mpesaEnv: Deno.env.get("MPESA_ENV")
+      mpesaEnv: Deno.env.get("MPESA_ENV"),
+      // Add first few chars of credentials to help with debugging
+      consumerKeyPrefix: consumerKey ? consumerKey.substring(0, 5) + "..." : "undefined",
+      secretPrefix: consumerSecret ? consumerSecret.substring(0, 5) + "..." : "undefined",
     });
     
     if (!consumerKey || !consumerSecret || !shortCode || !passKey) {
@@ -153,10 +156,20 @@ serve(async (req) => {
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       console.error("Failed to get access token:", errorText);
+      
+      let userFriendlyMessage = "Failed to authenticate with M-Pesa API";
+      
+      // Check for common auth errors to provide better guidance
+      if (errorText.includes("Invalid Credentials")) {
+        userFriendlyMessage = "M-Pesa API rejected your credentials. Please verify your Consumer Key and Secret are correct and active.";
+      } else if (errorText.includes("Unauthorized")) {
+        userFriendlyMessage = "M-Pesa API authentication failed. Check whether you're using correct production/sandbox credentials.";
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
-          message: "Failed to authenticate with M-Pesa API",
+          message: userFriendlyMessage,
           code: "AUTH_ERROR",
           details: `Status: ${tokenResponse.status}, Response: ${errorText}`
         }),
@@ -254,12 +267,29 @@ serve(async (req) => {
     if (!stkPushResponse.ok) {
       const errorText = await stkPushResponse.text();
       console.error("STK Push failed:", errorText);
+      
+      let userFriendlyMessage = "Failed to initiate STK Push with M-Pesa API";
+      let errorDetails = `Status: ${stkPushResponse.status}, Response: ${errorText}`;
+      
+      // Try to parse the error as JSON to extract more details
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.errorCode === "500.001.1001" || errorJson.errorMessage?.includes("Wrong credentials")) {
+          userFriendlyMessage = "M-Pesa rejected the STK push due to invalid credentials. Please check your Shortcode and Passkey.";
+        } else if (errorJson.errorMessage) {
+          userFriendlyMessage = `M-Pesa API error: ${errorJson.errorMessage}`;
+        }
+        errorDetails = JSON.stringify(errorJson);
+      } catch (parseError) {
+        // If parsing fails, use the raw error text
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
-          message: "Failed to initiate STK Push with M-Pesa API",
+          message: userFriendlyMessage,
           code: "STK_PUSH_ERROR",
-          details: `Status: ${stkPushResponse.status}, Response: ${errorText}`
+          details: errorDetails
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

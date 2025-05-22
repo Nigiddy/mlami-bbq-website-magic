@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertTriangle, CheckCircle, RefreshCw, WifiOff, Info } from 'lucide-react';
+import { Loader2, AlertTriangle, CheckCircle, RefreshCw, WifiOff, Info, Key } from 'lucide-react';
 import Receipt from './Receipt';
 import { CartItem } from '@/contexts/cart/types';
 
@@ -39,6 +39,10 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
       return <WifiOff className="h-5 w-5 text-red-500" />;
     }
     
+    if (lastError?.includes('credentials') || lastError?.includes('rejected')) {
+      return <Key className="h-5 w-5 text-red-500" />;
+    }
+    
     if (lastError) {
       return <AlertTriangle className="h-5 w-5 text-amber-500" />;
     }
@@ -60,6 +64,10 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
       return "Connection Issue";
     }
     
+    if (lastError?.includes('credentials') || lastError?.includes('rejected')) {
+      return "API Credentials Error";
+    }
+    
     if (lastError?.includes('Error code:')) {
       return "Payment Error";
     }
@@ -77,6 +85,10 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
       return "There seems to be a network issue. Please check your internet connection and try again.";
     }
     
+    if (lastError?.includes('credentials') || lastError?.includes('rejected')) {
+      return "The M-Pesa API rejected our authentication. This is likely a configuration issue that needs to be fixed by the site administrator.";
+    }
+    
     if (lastError) {
       return lastError;
     }
@@ -86,7 +98,7 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({
   
   const bgColor = paymentStatus === 'success' 
     ? 'bg-green-50 border-green-100' 
-    : lastError?.includes('Network error') || lastError?.includes('connection')
+    : lastError?.includes('Network error') || lastError?.includes('connection') || lastError?.includes('credentials')
       ? 'bg-red-50 border-red-100'
       : 'bg-yellow-50 border-yellow-100';
 
